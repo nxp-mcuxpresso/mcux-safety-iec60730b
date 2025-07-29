@@ -1,0 +1,17 @@
+NXP Software Content Register
+
+Package: mcux-safety-iec60730b
+Version: 5.0
+Outgoing License: LA_OPT_Online_Code_Hosting
+License File: LICENSE.txt
+Type of content: source code, object code, header files
+Description and comments:
+	  Safety is an obligatory part of many applications. 
+	  It is controlled by international standards related to electrical devices. 
+	  The affected devices are those that, in case of failure, can cause injury, 
+	  death, pollution, or other dangerous situations.
+Release Location: https://github.com/nxp-mcuxpresso/mcux-safety-iec60730b
+Origin:
+      NXP (Proprietary)
+	  NXP (BSD 3-clause)
+	  SRecord (GNU GPL) - https://www.gnu.org/licenses/gpl-3.0.txt

@@ -1,0 +1,7 @@
+
+menu "Safety IEC60730b"
+
+    config MCUX_COMPONENT_middleware.safety
+        bool "safety library"
+
+endmenu
