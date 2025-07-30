@@ -1,7 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
- * Copyright 2015-2023 NXP.
- * Copyright 2025 NXP.
+ * Copyright 2015-2023, 2025 NXP
  *
  * This software is owned or controlled by NXP and may only be used strictly
  * in accordance with the license terms

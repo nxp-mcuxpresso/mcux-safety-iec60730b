@@ -1,7 +1,6 @@
 /*
  * Copyright 2015 Freescale Semiconductor, Inc.
- * Copyright 2015-2022 NXP.
- * Copyright 2025 NXP.
+ * Copyright 2015-2022, 2025 NXP
  *
  * This software is owned or controlled by NXP and may only be used strictly
  * in accordance with the license terms
@@ -726,8 +725,8 @@ ASM_LABEL(FS_CM33_CPU_Special8PriorityLevels_S)
      * low-order bits read as zero and ignore writes. */
 
     MRS     R2, BASEPRI              /* backup value from base priority Register to general register  */
-    LDR     R1, =0x00         
-    MSR     BASEPRI, R1              /* cleared BASEPRI before start of the test */  
+    LDR     R1, =0x00
+    MSR     BASEPRI, R1              /* cleared BASEPRI before start of the test */
 
     LDR     R1, =0xA0                /* load pattern into R1*/
     MSR     BASEPRI, R1
@@ -782,8 +781,8 @@ ASM_LABEL(FS_CM33_CPU_Special8PriorityLevels_NS)
      * low-order bits read as zero and ignore writes. */
 
     MRS     R2, BASEPRI_NS           /* backup value from base priority Register to general register  */
-    LDR     R1, =0x00         
-    MSR     BASEPRI_NS, R1           /* cleared BASEPRI_NS before start of the test */  
+    LDR     R1, =0x00
+    MSR     BASEPRI_NS, R1           /* cleared BASEPRI before start of the test */
 
     LDR     R1, =0xA0                /* load pattern into R1*/
     MSR     BASEPRI_NS, R1

@@ -1,5 +1,5 @@
 /*
-  * Copyright 2015 - 2022 NXP.
+ * Copyright 2015-2022, 2025 NXP
  *
  * This software is owned or controlled by NXP and may only be used strictly
  * in accordance with the license terms
