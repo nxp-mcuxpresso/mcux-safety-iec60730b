@@ -1,0 +1,15 @@
+# Copyright 2025 NXP
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "Safety iec60730b sample application"
+
+config APP_SAFETY_ERROR_ACTION_INFINITE_LOOP
+	bool "Infinite loop on safety error"
+	default y
+	help
+	  Enter an infinite loop when a safety error is detected.
+	  The system will be stuck in a loop, preventing further execution
+	  while maintaining processor activity. This can be useful for
+	  debugging or when a controlled hang is preferred over a no action.
+
+source "Kconfig.zephyr"
