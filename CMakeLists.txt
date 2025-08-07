@@ -185,3 +185,6 @@ if(CONFIG_MCUX_COMPONENT_middleware.safety)
 	
 endif()
 
+# Needs to be defined to satisfy project dependency
+if (CONFIG_MCUX_PRJSEG_middleware.safety.generated_config)
+endif ()
