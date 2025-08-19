@@ -5,10 +5,6 @@
 
 #include "safety_tests.h"
 
-/*******************************************************************************
- * Code
- ******************************************************************************/
-
 /*!
  * @brief   After-reset CPU registers test.
  *
@@ -38,7 +34,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
         SafetyErrorHandling(psSafetyCommon);
     }
     /* CONTROL */
-#if FPU_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_FPU
     psSafetyCommon->CPU_control_test_result = FS_CM4_CM7_CPU_ControlFpu();
 #else
     psSafetyCommon->CPU_control_test_result = FS_CM4_CM7_CPU_Control();
@@ -70,7 +66,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
         SafetyErrorHandling(psSafetyCommon);
     }
     /* group 1 of FPU registers */
-#if FPU_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_FPU
     psSafetyCommon->CPU_float_test_1_result = FS_CM4_CM7_CPU_Float1();
     if (psSafetyCommon->CPU_float_test_1_result == FS_FAIL_CPU_FLOAT_1)
     {
@@ -114,7 +110,7 @@ void SafetyCpuBackgroundTest(safety_common_t *psSafetyCommon)
         psSafetyCommon->safetyErrors |= CPU_NONSTACKED_ERROR;
         SafetyErrorHandling(psSafetyCommon);
     }
-#if FPU_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_FPU
     psSafetyCommon->CPU_float_test_1_result = FS_CM4_CM7_CPU_Float1();
     if (psSafetyCommon->CPU_float_test_1_result == FS_FAIL_CPU_FLOAT_1)
     {

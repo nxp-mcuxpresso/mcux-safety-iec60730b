@@ -1,10 +1,7 @@
 /*
  * Copyright (c) 2016 Intel Corporation
- * Copyright 2025 NXP
  * SPDX-License-Identifier: Apache-2.0
  */
-
-#include "safety_tests.h"
 
 #include <stdio.h>
 #include <zephyr/kernel.h>
@@ -23,8 +20,6 @@
  */
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
-static safety_common_t g_sSafetyCommon;
-
 int main(void)
 {
 	int ret;
@@ -39,11 +34,6 @@ int main(void)
 		return 0;
 	}
 
-#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG
-	/* CPU test after reset */
-	SafetyCpuAfterResetTest(&g_sSafetyCommon);
-#endif
-
 	while (1) {
 		ret = gpio_pin_toggle_dt(&led);
 		if (ret < 0) {
@@ -53,12 +43,6 @@ int main(void)
 		led_state = !led_state;
 		printf("LED state: %s\n", led_state ? "ON" : "OFF");
 		k_msleep(SLEEP_TIME_MS);
-
-	#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG
-		/* Interruptable CPU registers test */
-		SafetyCpuBackgroundTest(&g_sSafetyCommon);
-	#endif
-
 	}
 	return 0;
 }

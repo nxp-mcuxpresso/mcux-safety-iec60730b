@@ -5,10 +5,6 @@
 
 #include "safety_tests.h"
 
-/*******************************************************************************
- * Code
- ******************************************************************************/
-
 /*!
  * @brief   After-reset CPU registers test.
  *
@@ -23,7 +19,7 @@
  */
 void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
 {
-#if DSP_SUPPORT
+#ifdef SAFETY_IEC60730B_TEST_CPU_REG_DSP
     /* stacked CPU registers */
     psSafetyCommon->CPU_reg_test_result = FS_CM33_CPU_Register();
     if (psSafetyCommon->CPU_reg_test_result == FS_FAIL_CPU_REGISTER)
@@ -57,7 +53,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
         SafetyErrorHandling(psSafetyCommon);
     }
     
-#if TZ_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_TZ
     /* PRIMASK Non-Secure */
     psSafetyCommon->CPU_primask_ns_test_result = FS_CM33_CPU_Primask_NS();
     if (psSafetyCommon->CPU_primask_ns_test_result == FS_FAIL_CPU_PRIMASK)
@@ -70,7 +66,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
     /* SP main Secure */
     FS_CM33_CPU_SPmain_S();
     
-#if TZ_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_TZ
     /* SP main Non-Secure */
     FS_CM33_CPU_SPmain_NS();
 #endif
@@ -78,7 +74,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
     /* SP main limit Secure */
     FS_CM33_CPU_SPmain_Limit_S();
     
-#if TZ_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_TZ
     /* SP main limit Non-Secure */
     FS_CM33_CPU_SPmain_Limit_NS();
 #endif
@@ -86,7 +82,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
     /* SP process Secure */
     FS_CM33_CPU_SPprocess_S();
     
-#if TZ_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_TZ
     /* SP process Non-Secure */
     FS_CM33_CPU_SPprocess_NS();
 #endif
@@ -94,7 +90,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
     /* SP process limit Secure */
     FS_CM33_CPU_SPprocess_Limit_S();
     
-#if TZ_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_TZ
     /* SP process limit Non-Secure */
     FS_CM33_CPU_SPprocess_Limit_NS();
 #endif
@@ -106,7 +102,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
         SafetyErrorHandling(psSafetyCommon);
     }
     
-#if TZ_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_TZ
     /* CONTROL Non-Secure */
     psSafetyCommon->CPU_control_ns_test_result = FS_CM33_CPU_Control_NS();
     if (psSafetyCommon->CPU_control_ns_test_result == FS_FAIL_CPU_CONTROL)
@@ -124,7 +120,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
         SafetyErrorHandling(psSafetyCommon);
     }
     
-#if TZ_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_TZ
     /* Special Non-Secure */
     psSafetyCommon->CPU_special_ns_test_result = FS_CM33_CPU_Special8PriorityLevels_NS();
     if (psSafetyCommon->CPU_special_ns_test_result == FS_FAIL_CPU_SPECIAL)
@@ -134,7 +130,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
     }
 #endif
 
-#if FPU_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_FPU
     psSafetyCommon->CPU_fpu_test_result = FS_CM33_CPU_Float1();
     if (psSafetyCommon->CPU_fpu_test_result == FS_FAIL_CPU_FLOAT_1)
     {
@@ -165,7 +161,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
  */
 void SafetyCpuBackgroundTest(safety_common_t *psSafetyCommon)
 {
-#if DSP_SUPPORT
+#ifdef SAFETY_IEC60730B_TEST_CPU_REG_DSP
     /* stacked CPU registers */
     psSafetyCommon->CPU_reg_test_result = FS_CM33_CPU_Register();
     if (psSafetyCommon->CPU_reg_test_result == FS_FAIL_CPU_REGISTER)
@@ -190,7 +186,7 @@ void SafetyCpuBackgroundTest(safety_common_t *psSafetyCommon)
         SafetyErrorHandling(psSafetyCommon);
     }
     
-#if FPU_SUPPORT
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_FPU
     psSafetyCommon->CPU_fpu_test_result = FS_CM33_CPU_Float1();
     if (psSafetyCommon->CPU_fpu_test_result == FS_FAIL_CPU_FLOAT_1)
     {
