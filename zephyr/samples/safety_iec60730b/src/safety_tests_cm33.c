@@ -19,7 +19,7 @@
  */
 void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
 {
-#ifdef SAFETY_IEC60730B_TEST_CPU_REG_DSP
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_DSP
     /* stacked CPU registers */
     psSafetyCommon->CPU_reg_test_result = FS_CM33_CPU_Register();
     if (psSafetyCommon->CPU_reg_test_result == FS_FAIL_CPU_REGISTER)
@@ -161,7 +161,7 @@ void SafetyCpuAfterResetTest(safety_common_t *psSafetyCommon)
  */
 void SafetyCpuBackgroundTest(safety_common_t *psSafetyCommon)
 {
-#ifdef SAFETY_IEC60730B_TEST_CPU_REG_DSP
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_DSP
     /* stacked CPU registers */
     psSafetyCommon->CPU_reg_test_result = FS_CM33_CPU_Register();
     if (psSafetyCommon->CPU_reg_test_result == FS_FAIL_CPU_REGISTER)

@@ -7,10 +7,11 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-/*******************************************************************************
-* Variables
-******************************************************************************/
-static void safety_tests_thread(void *arg1, void *arg2, void *arg3);
+/* TBD:
+    - Add task watchdog.
+    - Add other safety tests.
+    - Other improvements.
+*/
 
 /*******************************************************************************
 * Variables
@@ -33,36 +34,62 @@ uint32_t m_safety_error_code; /* Global error code. It should be allocated in th
  */
 static safety_common_t g_sSafetyCommon;
 
-/* Register this module for logging */
+static int safety_tests_init(void);
+static void safety_tests_thread(void *arg1, void *arg2, void *arg3);
+
+/*!
+ * @brief Register safety_tests module for logging
+ */
 LOG_MODULE_REGISTER(safety_tests, CONFIG_APP_SAFETY_TESTS_LOG_LEVEL);
+
+/*!
+ * @brief   System initialization hook for safety tests after reset.
+ *
+ *          This system initialization call ensures that IEC 60730-B compliant safety tests
+ *          are executed automatically during system startup after the kernel is initialized.
+ *          The safety tests run at the default kernel initialization priority level to
+ *          verify system integrity before normal application execution begins.
+ */
+SYS_INIT(safety_tests_init, POST_KERNEL /* EARLY */, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
+
+/*!
+ * @brief   Safety test thread definition and automatic startup configuration.
+ */
+K_THREAD_DEFINE(safety_tests, CONFIG_APP_SAFETY_TESTS_THREAD_STACK_SIZE,
+                safety_tests_thread, NULL, NULL, NULL,
+                CONFIG_APP_SAFETY_TESTS_THREAD_PRIORITY, 0, 0);
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
 
- /* Define and automatically start the safety test thread */
-K_THREAD_DEFINE(safety_tests, CONFIG_APP_SAFETY_TESTS_THREAD_STACK_SIZE,
-                safety_tests_thread, NULL, NULL, NULL,
-                CONFIG_APP_SAFETY_TESTS_THREAD_PRIORITY, 0, 0);
+/*!
+ * @brief   Safety tests initialization function executed during system startup.
+ *
+ *          This function performs IEC 60730-B compliant safety tests that must be
+ *          executed during system initialization after reset to ensure safety 
+ *          tests complete before application code execution.
+ *          Additional safety tests can be added.
+ *
+ * @return  0 on successful completion of initialization safety tests
+ */
+static int safety_tests_init(void)
+{
+#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG
+    LOG_INF("Executing CPU after reset test");
+    SafetyCpuAfterResetTest(&g_sSafetyCommon);
+#endif
+
+    /* === ADD YOUR SAFETY TESTS HERE === */
+
+    return 0;
+}
 
 /*!
  * @brief   Safety test thread function that executes periodic safety tests.
  *
- *          This thread function runs continuously to perform IEC 60730-B compliant safety tests.
- *          It executes CPU register tests after reset (if configured) and then enters a loop
- *          to perform background safety tests at regular intervals.
- *          
- *          The thread performs the following operations:
- *          - Executes CPU after-reset test during initialization (if enabled)
- *          - Runs periodic background CPU register tests (if enabled)
- *          - Sleeps for 1 second between test iterations
- *          - Provides debug output for test execution status
- *
- * @param   arg1 - Unused thread argument (marked as unused)
- * @param   arg2 - Unused thread argument (marked as unused)  
- * @param   arg3 - Unused thread argument (marked as unused)
- *
- * @return  None (thread function runs indefinitely)
+ *          This thread function runs continuously to perform background
+ *          IEC 60730-B compliant safety tests at regular intervals.
  */
 static void safety_tests_thread(void *arg1, void *arg2, void *arg3)
 {
@@ -71,12 +98,8 @@ static void safety_tests_thread(void *arg1, void *arg2, void *arg3)
     ARG_UNUSED(arg3);
 
     LOG_INF("Safety test thread started automatically");
-    
-#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG
-    LOG_INF("Executing CPU after reset test");
-    SafetyCpuAfterResetTest(&g_sSafetyCommon);
-#endif
 
+    /* Thread function runs indefinitely */
     while (1) {
 #ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG
         /* Interruptable CPU registers test */
@@ -84,7 +107,7 @@ static void safety_tests_thread(void *arg1, void *arg2, void *arg3)
         SafetyCpuBackgroundTest(&g_sSafetyCommon);
 #endif
 
-        /* ADD YOUR SAFETY TESTS HERE*/
+        /* === ADD YOUR SAFETY TESTS HERE ==*/
 
         /* Sleep before next iteration */
         k_msleep(CONFIG_APP_SAFETY_TESTS_PERIOD_MS);
