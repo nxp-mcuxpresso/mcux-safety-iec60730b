@@ -10,20 +10,3 @@ target_sources(app PRIVATE
     src/safety_tests.c
 )
 
-# Add tests for Cortex-M0+ CPU
-if(CONFIG_CPU_CORTEX_M0PLUS)
-    target_sources(app PRIVATE
-        src/safety_tests_cm0.c
-    )
-# Add tests for Cortex-M4/M7 CPU
-elseif(CONFIG_CPU_CORTEX_M4 OR CONFIG_CPU_CORTEX_M7)
-    target_sources(app PRIVATE
-        src/safety_tests_cm4_cm7.c
-    )
-# Add Cortex-M33 specific safety tests
-elseif(CONFIG_CPU_CORTEX_M33)
-    target_sources(app PRIVATE
-        src/safety_tests_cm33.c
-    )
-endif()
-

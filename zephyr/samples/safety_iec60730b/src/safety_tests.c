@@ -8,34 +8,21 @@
 #include <zephyr/logging/log.h>
 
 /* TBD:
-    - Add task watchdog.
+    - Add Non-Interruptable CPU registers test
     - Add other safety tests.
-    - Other improvements.
+    - ?Add watchdog?
+    - ?Enable Zephyr stack protection?
 */
 
 /*******************************************************************************
 * Variables
 ******************************************************************************/
-uint32_t m_safety_error_code; /* Global error code. It should be allocated in the 
-                                 dedicated RAM memory that is deleted only after POR. */
-
-/*!
- * @brief   Global safety common structure
- *
- *          This structure contains the common safety test data and error tracking
- *          information used across all IEC 60730-B safety tests. It maintains:
- *          - Safety error codes and status flags
- *          - Test execution state and results
- *          - Configuration parameters for safety tests
- *          - Runtime data for periodic and background safety checks
- *
- *          The structure is shared between different safety test modules and
- *          provides a centralized location for safety-related status information.
- */
-static safety_common_t g_sSafetyCommon;
+int safety_error_code; /* Global error code. It should be allocated in the 
+                          dedicated RAM memory that is deleted only after POR. */
 
 static int safety_tests_init(void);
 static void safety_tests_thread(void *arg1, void *arg2, void *arg3);
+static void safety_error_handling(int error_code);
 
 /*!
  * @brief Register safety_tests module for logging
@@ -75,9 +62,14 @@ K_THREAD_DEFINE(safety_tests, CONFIG_APP_SAFETY_TESTS_THREAD_STACK_SIZE,
  */
 static int safety_tests_init(void)
 {
+    int result;
+
 #ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG
     LOG_INF("Executing CPU after reset test");
-    SafetyCpuAfterResetTest(&g_sSafetyCommon);
+    result = sf_cpu_reg_test_init();
+    if(result != FS_TEST_OK){
+        safety_error_handling(result);
+    }
 #endif
 
     /* === ADD YOUR SAFETY TESTS HERE === */
@@ -97,6 +89,8 @@ static void safety_tests_thread(void *arg1, void *arg2, void *arg3)
     ARG_UNUSED(arg2);
     ARG_UNUSED(arg3);
 
+    int result;
+
     LOG_INF("Safety test thread started automatically");
 
     /* Thread function runs indefinitely */
@@ -104,7 +98,10 @@ static void safety_tests_thread(void *arg1, void *arg2, void *arg3)
 #ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG
         /* Interruptable CPU registers test */
         LOG_INF("Executing CPU background test");
-        SafetyCpuBackgroundTest(&g_sSafetyCommon);
+        result = sf_cpu_reg_test();
+        if(result != FS_TEST_OK){
+            safety_error_handling(result);
+        }
 #endif
 
         /* === ADD YOUR SAFETY TESTS HERE ==*/
@@ -126,10 +123,10 @@ static void safety_tests_thread(void *arg1, void *arg2, void *arg3)
  *
  * @return  None
  */
-void SafetyErrorHandling(safety_common_t *psSafetyCommon)
+static void safety_error_handling(int error_code)
 {
-    m_safety_error_code = psSafetyCommon->safetyErrors;
-    LOG_ERR("Safety error detected: 0x%08x", m_safety_error_code);
+    safety_error_code |= error_code;
+    LOG_ERR("Safety error detected: 0x%08x", safety_error_code);
 
 #ifdef CONFIG_APP_SAFETY_ERROR_ACTION_INFINITE_LOOP
     (void)irq_lock(); /* Disable interrupts */

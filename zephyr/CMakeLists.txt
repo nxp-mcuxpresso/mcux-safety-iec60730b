@@ -6,6 +6,7 @@ if(CONFIG_SAFETY_IEC60730B)
     # Set path varriables
     set(SAFETY_IEC60730B_DIR ${ZEPHYR_CURRENT_MODULE_DIR})
     set(SAFETY_IEC60730B_SRC_DIR ${SAFETY_IEC60730B_DIR}/source)
+    set(SAFETY_IEC60730B_ZEPHYR_SRC_DIR ${ZEPHYR_CURRENT_MODULE_DIR}/zephyr/src)
 
     zephyr_library_named(safety_iec60730b)
 
@@ -18,7 +19,7 @@ if(CONFIG_SAFETY_IEC60730B)
         ${SAFETY_IEC60730B_SRC_DIR}/common_test/tsi
         ${SAFETY_IEC60730B_SRC_DIR}/common_test/wdog
         ${SAFETY_IEC60730B_SRC_DIR}/compiler
-        ${ZEPHYR_CURRENT_MODULE_DIR}/zephyr/src
+        ${SAFETY_IEC60730B_ZEPHYR_SRC_DIR}
     )
 
     # Tests for Cortex-M0+ CPU
@@ -34,6 +35,7 @@ if(CONFIG_SAFETY_IEC60730B)
         )
 
         zephyr_library_sources_ifdef(CONFIG_SAFETY_IEC60730B_TEST_CPU_REG ${SAFETY_IEC60730B_SRC_DIR}/core_test/cm0/register/iec60730b_cm0_reg.S)
+        zephyr_library_sources(${SAFETY_IEC60730B_ZEPHYR_SRC_DIR}/safety_tests_cm0.c)
 
     # Tests for Cortex-M4/M7 CPU
     elseif(CONFIG_CPU_CORTEX_M4 OR CONFIG_CPU_CORTEX_M7)
@@ -49,6 +51,7 @@ if(CONFIG_SAFETY_IEC60730B)
 
         zephyr_library_sources_ifdef(CONFIG_SAFETY_IEC60730B_TEST_CPU_REG ${SAFETY_IEC60730B_SRC_DIR}/core_test/cm4_cm7/register/iec60730b_cm4_cm7_reg.S)
         zephyr_library_sources_ifdef(CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_FPU ${SAFETY_IEC60730B_SRC_DIR}/core_test/cm4_cm7/register/iec60730b_cm4_cm7_reg_fpu.S)
+        zephyr_library_sources(${SAFETY_IEC60730B_ZEPHYR_SRC_DIR}/safety_tests_cm4_cm7.c)
 
     # Tests for Cortex-M33 CPU
     elseif(CONFIG_CPU_CORTEX_M33)
@@ -65,6 +68,7 @@ if(CONFIG_SAFETY_IEC60730B)
         zephyr_library_sources_ifdef(CONFIG_SAFETY_IEC60730B_TEST_CPU_REG ${SAFETY_IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg.S)
         zephyr_library_sources_ifdef(CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_FPU ${SAFETY_IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg_fpu.S)
         zephyr_library_sources_ifdef(CONFIG_SAFETY_IEC60730B_TEST_CPU_REG_DSP ${SAFETY_IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg_dsp_ext.S)
+        zephyr_library_sources(${SAFETY_IEC60730B_ZEPHYR_SRC_DIR}/safety_tests_cm33.c)
 
     else()
         message(FATAL_ERROR "Platform is not supported!")

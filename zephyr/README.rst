@@ -15,8 +15,6 @@ Safety iec60730b library for Zephyr
 Safety iec60730b library environment setup
 **************************
 
-THIS IS DRAFT VERSION
-
 Follow these steps to set up a development environment on your machine.
 
 #. If you haven't already, please follow `this guide <https://docs.zephyrproject.org/latest/develop/getting_started/index.html>`_ to set up a Zephyr development environment and its dependencies first.
@@ -57,7 +55,7 @@ See Zephyr's `Building, Flashing and Debugging <https://docs.zephyrproject.org/l
 
     For example, this compiles the iec60730b example for a frdm-rw612 board::
 
-        1. cd iec60730b/zephyr
+        1. cd modules/safety/iec60730b/zephyr
         2. west build -b frdm_rw612 samples/safety_iec60730b -p
 
 #. To **run** a project, run:
@@ -74,12 +72,10 @@ Folder structure
 
     iec60730b/
     ├─── ...
-    └─── zephyr/                All Zephyr related files
-        ├── samples/            Sample examples
-        ├── tests/              Tests (TBD)
-        ├── audioTracks/        Audio tracks for testing
-        ├── doc/                Documentation configuration for Sphinx (TBD)
-        ├── module.yml          Defines module name, Cmake and Kconfig locations
-        ├── CMakeList.txt       Defines module's build process
-        ├── Kconfig             Defines module's configuration
+    └─── zephyr/                All Zephyr related files.
+        ├── samples/            Sample examples.
+        ├── src/                Zephyr specific library source code.
+        ├── module.yml          Defines module name, Cmake and Kconfig locations.
+        ├── CMakeList.txt       Defines module's build process.
+        ├── Kconfig             Defines module's configuration.
         └── ...

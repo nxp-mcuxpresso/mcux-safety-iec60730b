@@ -13,11 +13,11 @@ config APP_SAFETY_TESTS_THREAD_STACK_SIZE
 
 config APP_SAFETY_TESTS_THREAD_PRIORITY
 	int "Safety test thread priority"
-	default 5
+	default -16 
 	help
 	  Priority level for the safety test thread.
 	  Lower values indicate higher priority.
-	  Should be set appropriately relative to other system threads.
+	  By default set to the absolute highest priority -16 for critical safety functions.
 
 config APP_SAFETY_TESTS_PERIOD_MS
 	int "Safety test execution period in milliseconds"
