@@ -3,7 +3,7 @@
 
 mainmenu "Safety iec60730b sample application"
 
-config APP_SAFETY_TESTS_THREAD_STACK_SIZE
+config APP_SAFETY_THREAD_STACK_SIZE
 	int "Safety test thread stack size"
 	default 1024
 	help
@@ -11,7 +11,7 @@ config APP_SAFETY_TESTS_THREAD_STACK_SIZE
 	  This thread runs periodic safety tests and monitors system health.
 	  Increase this value if the safety tests require more stack space.
 
-config APP_SAFETY_TESTS_THREAD_PRIORITY
+config APP_SAFETY_THREAD_PRIORITY
 	int "Safety test thread priority"
 	default -16 
 	help
@@ -19,7 +19,7 @@ config APP_SAFETY_TESTS_THREAD_PRIORITY
 	  Lower values indicate higher priority.
 	  By default set to the absolute highest priority -16 for critical safety functions.
 
-config APP_SAFETY_TESTS_PERIOD_MS
+config APP_SAFETY_PERIOD_MS
 	int "Safety test execution period in milliseconds"
 	default 1000
 	help
@@ -28,7 +28,7 @@ config APP_SAFETY_TESTS_PERIOD_MS
 	  Shorter periods provide faster error detection but consume more CPU.
 	  Longer periods reduce CPU usage but may delay error detection.
 
-config APP_SAFETY_TESTS_LOG_LEVEL
+config APP_SAFETY_LOG_LEVEL
 	int "Safety tests log level"
 	default 3
 	range 0 4
@@ -37,13 +37,50 @@ config APP_SAFETY_TESTS_LOG_LEVEL
 	  Sets the log level for the safety tests module.
 	  Levels: 0=OFF, 1=ERROR, 2=WARNING, 3=INFO, 4=DEBUG
 
-config APP_SAFETY_ERROR_ACTION_INFINITE_LOOP
-	bool "Infinite loop on safety error"
-	default y
+choice APP_SAFETY_ERROR_ACTION
+	prompt "Safety Error Action"
+	default APP_SAFETY_ERROR_ACTION_INFINITE_LOOP
 	help
-	  Enter an infinite loop when a safety error is detected.
+	  Select the action to take when a safety error is detected.
+
+config APP_SAFETY_ERROR_ACTION_INFINITE_LOOP
+	bool "Infinite Loop"
+	help
+	  When a safety error is detected, disable interrupts and enter an infinite loop,
 	  The system will be stuck in a loop, preventing further execution
 	  while maintaining processor activity. This can be useful for
 	  debugging or when a controlled hang is preferred over a no action.
+
+config APP_SAFETY_ERROR_ACTION_RESET
+	bool "System Reset"
+	help
+	  When a safety error is detected, immediately perform a cold system reset.
+	  This allows for quick recovery from safety violations.
+
+endchoice
+
+config APP_SAFETY_TASK_WATCHDOG
+    bool "Enable Safety Task Watchdog"
+    default y
+    depends on TASK_WDT
+    help
+      Enable task watchdog for safety monitoring. The task watchdog
+      monitors the safety test thread and triggers a callback if
+      the thread fails to feed the watchdog within the specified timeout.
+      This provides an additional safety mechanism to detect thread
+      failures or system hangs.
+
+if APP_SAFETY_TASK_WATCHDOG
+
+config APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS
+    int "Task watchdog timeout in milliseconds"
+    default 10000
+    help
+      Timeout value for the safety task watchdog in milliseconds.
+      This should be larger than CONFIG_APP_SAFETY_TESTS_PERIOD_MS
+      to allow for test execution time. If the safety thread doesn't
+      feed the watchdog within this time, the callback will be triggered.
+
+endif # APP_SAFETY_TASK_WATCHDOG
 
 source "Kconfig.zephyr"
