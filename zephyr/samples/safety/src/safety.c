@@ -58,13 +58,12 @@ K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE,
  ******************************************************************************/
 
 /*!
- * @brief   Safety tests initialization function executed during system startup.
+ * @brief   Safety initialization function executed during system startup.
  */
 static int safety_init(void)
 {
-    int result;
-
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
+    int result;
     const struct device *const hw_wdt_dev = DEVICE_DT_GET_OR_NULL(WDT_NODE);
 
     if (!device_is_ready(hw_wdt_dev)) {
@@ -95,7 +94,7 @@ static int safety_init(void)
 }
 
 /*!
- * @brief   Safety test thread function that executes periodic safety tests.
+ * @brief   Safety test thread function that executes periodic runtime safety tests.
  */
 static void safety_thread(void *arg1, void *arg2, void *arg3)
 {
@@ -116,7 +115,7 @@ static void safety_thread(void *arg1, void *arg2, void *arg3)
 }
 
 /*!
- * @brief   Handling with a safety error.
+ * @brief  Safety error handling
  */
 static void safety_error_handling(int error_code)
 {
@@ -200,4 +199,3 @@ static void safety_rutime_tests(void)
     task_wdt_feed(safety_task_wdt_id);
 #endif
 }
-

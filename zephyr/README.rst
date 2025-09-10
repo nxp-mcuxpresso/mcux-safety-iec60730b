@@ -2,7 +2,7 @@
 .. Safety iec60730b library module
 
 #################
-Safety iec60730b library for Zephyr
+Safety IEC60730B library for Zephyr
 #################
 * Based on and tested with Zephyr v4.2.0
 
@@ -12,16 +12,16 @@ Safety iec60730b library for Zephyr
 
 
 **************************
-Safety iec60730b library environment setup
+Safety IEC60730B library environment setup
 **************************
 
 Follow these steps to set up a development environment on your machine.
 
 #. If you haven't already, please follow `this guide <https://docs.zephyrproject.org/latest/develop/getting_started/index.html>`_ to set up a Zephyr development environment and its dependencies first.
 
-#. Get the Safety iec60730b library. You can pick either of the options listed below.
+#. Get the Safety IEC60730B library. You can pick either of the options listed below.
 
-    * Freestanding iec60730b module - pulls in only the dependencies it needs including Zephyr itself.
+    * Freestanding Zephyr iec60730b module - pulls in only the dependencies it needs including Zephyr itself.
 
          Run::
 
@@ -29,9 +29,9 @@ Follow these steps to set up a development environment on your machine.
             2. cd <folder_name>
             3. west update
 
-    * iec60730b as a Zephyr module - if you already have your Zephyr environment set up.
+    * iec60730b as a Zephyr project - if you already have your Zephyr environment set up.
 
-        To include iec60730b into Zephyr, update Zephyr's ``west.yml`` file::
+        To include iec60730b into Zephyr, update your Zephyr's ``west.yml`` file::
 
             projects:
             - name: safety_iec60730b
@@ -51,12 +51,12 @@ See Zephyr's `Building, Flashing and Debugging <https://docs.zephyrproject.org/l
 
     ::
 
-        west build -b <board> -<path to example> -p
+        west build -b <board> <path to example> -p
 
     For example, this compiles the iec60730b example for a frdm-rw612 board::
 
         1. cd modules/safety/iec60730b/zephyr
-        2. west build -b frdm_rw612 samples/safety_iec60730b -p
+        2. west build -b frdm_rw612 samples/safety -p
 
 #. To **run** a project, run:
 

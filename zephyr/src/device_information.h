@@ -1,7 +1,8 @@
 /*
  * Copyright 2025 NXP
  * SPDX-License-Identifier: Apache-2.0
- * This header is included by the iec60730b safety library
+ *
+ * This header is included by the iec60730b bare-metal library
  */
 
 #ifndef _DEVICE_INFORMATION_H_

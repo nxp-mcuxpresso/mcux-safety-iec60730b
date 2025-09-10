@@ -1,7 +1,7 @@
 sample:
   name: Safety iec60730b Sample
 tests:
-  sample.safety.iec60730b:
+  sample.iec60730b.safety:
     tags:
       - safety
     integration_platforms:
