@@ -3,30 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <safety_tests.h>
+#include <iec60730b_test.h>
+
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-
 #include <zephyr/device.h>
 #include <zephyr/drivers/watchdog.h>
 #include <zephyr/task_wdt/task_wdt.h>
 #include <zephyr/sys/reboot.h>
 
-/* TBD:
-    - Add other safety tests.
-*/
-
 /*******************************************************************************
-* Variables
+* Declarations
 ******************************************************************************/
-int safety_error_code; /* Global error code. */
-
 static int safety_init(void);
 static void safety_thread(void *arg1, void *arg2, void *arg3);
 static void safety_error_handling(int error_code);
+static void safety_startup_tests(void);
+static void safety_rutime_tests(void);
 
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-
 static void safety_task_wdt_callback(int channel_id, void *user_data);
 
 #if DT_NODE_HAS_STATUS_OKAY(DT_ALIAS(watchdog0))
@@ -37,8 +32,9 @@ static void safety_task_wdt_callback(int channel_id, void *user_data);
 
 /* Task watchdog channel ID for safety tests monitoring. */
 int safety_task_wdt_id;
-
 #endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
+
+int safety_error_code; /* Global error code. */
 
 /*!
  * @brief Register safety_tests module for logging
@@ -47,11 +43,6 @@ LOG_MODULE_REGISTER(safety, CONFIG_APP_SAFETY_LOG_LEVEL);
 
 /*!
  * @brief   System initialization hook for safety tests after reset.
- *
- *          This system initialization call ensures that IEC 60730-B compliant safety tests
- *          are executed automatically during system startup after the kernel is initialized.
- *          The safety tests run at the APPLICATION priority level to verify system integrity
- *          before normal application execution begins.
  */
 SYS_INIT(safety_init, APPLICATION, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
 
@@ -85,31 +76,20 @@ static int safety_init(void)
 
     if (result != 0) {
         LOG_ERR("task wdt init failure: %d\n", result);
-        safety_error_handling(-1);
+        safety_error_handling(IEC60730B_TEST_ERROR);
     }
 
     /* Add a new task watchdog channel with the safety callback function */
     safety_task_wdt_id = task_wdt_add(CONFIG_APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS, safety_task_wdt_callback, NULL);
     if (safety_task_wdt_id < 0) {
         LOG_ERR("Failed to add task WDT channel");
-        safety_error_handling(-1);
+        safety_error_handling(IEC60730B_TEST_ERROR);
     }
     LOG_INF("Task WDT channel %d added with timeout %d ms", safety_task_wdt_id, CONFIG_APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS);
 #endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
 
-#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG
-    LOG_INF("Executing CPU after reset test");
-    result = sf_cpu_reg_test();
-    if(result != 0){
-        safety_error_handling(result);
-    }
-#endif
-
-    /* === ADD YOUR SAFETY TESTS HERE === */
-
-#ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-        task_wdt_feed(safety_task_wdt_id);
-#endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
+    /* Perform startup safety tests */
+    safety_startup_tests();
 
     return 0;
 }
@@ -123,27 +103,12 @@ static void safety_thread(void *arg1, void *arg2, void *arg3)
     ARG_UNUSED(arg2);
     ARG_UNUSED(arg3);
 
-    int result;
-
     LOG_INF("Safety test thread started automatically");
 
     /* Thread function runs indefinitely */
     while (1) {
-
-#ifdef CONFIG_SAFETY_IEC60730B_TEST_CPU_REG
-        /* CPU registers tests */
-        LOG_INF("Executing CPU background test");
-        result = sf_cpu_reg_test();
-        if(result != 0){
-            safety_error_handling(result);
-        }
-#endif
-
-        /* === ADD YOUR SAFETY TESTS HERE ==*/
-
-#ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-        task_wdt_feed(safety_task_wdt_id);
-#endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
+        /* Perform runtime safety tests */
+        safety_rutime_tests();
 
         /* Sleep before next iteration */
         k_msleep(CONFIG_APP_SAFETY_PERIOD_MS);
@@ -173,11 +138,66 @@ static void safety_error_handling(int error_code)
 }
 
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
+/*!
+ * @brief   Callback function for task watchdog timeout events.
+ */
 static void safety_task_wdt_callback(int channel_id, void *user_data)
 {
     ARG_UNUSED(user_data);
     LOG_WRN("Task watchdog channel %d timeout", channel_id);
 
-    safety_error_handling(-1);
+    safety_error_handling(IEC60730B_TEST_WDT_ERROR);
 }
 #endif
+
+/*******************************************************************************
+ * ADD YOUR SAFETY TESTS HERE
+ ******************************************************************************/
+/*!
+ * @brief   Executes safety tests during system startup.
+ *
+ * This function performs various safety tests that are required to be executed
+ * during system initialization.
+ * If any test fails, the safety error handling mechanism is invoked.
+ */
+static void safety_startup_tests(void)
+{
+    int result;
+
+#ifdef CONFIG_IEC60730B_TEST_CPU_REG
+    LOG_INF("Executing CPU Registers tests");
+    result = iec60730b_test_cpu_reg();
+    if(result < 0){
+        safety_error_handling(result);
+    }
+#endif
+
+#ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
+    task_wdt_feed(safety_task_wdt_id);
+#endif
+}
+
+/*!
+ * @brief   Executes safety tests during system runtime.
+ *
+ * This function performs various safety tests that are required to be executed
+ * during normal system operation.
+ * If any test fails, the safety error handling mechanism is invoked.
+ */
+static void safety_rutime_tests(void)
+{
+   int result;
+
+#ifdef CONFIG_IEC60730B_TEST_CPU_REG
+    LOG_INF("Executing CPU Registers tests");
+    result = iec60730b_test_cpu_reg();
+    if(result < 0){
+        safety_error_handling(result);
+    }
+#endif
+
+#ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
+    task_wdt_feed(safety_task_wdt_id);
+#endif
+}
+

@@ -1,32 +1,32 @@
 # Copyright 2025 NXP
 # SPDX-License-Identifier: Apache-2.0
 
-menuconfig SAFETY_IEC60730B
+menuconfig IEC60730B
     bool "Safety iec60730b librray support"
     help
       This option enables the Safety iec60730b test library
 
-if SAFETY_IEC60730B
+if IEC60730B
 
-    config SAFETY_IEC60730B_TEST_CPU_REG
+    config IEC60730B_TEST_CPU_REG
         bool "Enables CPU registers test routines"
         default y
 
-    config SAFETY_IEC60730B_TEST_CPU_REG_FPU
+    config IEC60730B_TEST_CPU_REG_FPU
         bool "Enables FPU registers test routines"
         default y
-        depends on SAFETY_IEC60730B_TEST_CPU_REG && CPU_HAS_FPU
+        depends on IEC60730B_TEST_CPU_REG && CPU_HAS_FPU
         select FPU
 
-    config SAFETY_IEC60730B_TEST_CPU_REG_DSP
+    config IEC60730B_TEST_CPU_REG_DSP
         bool "Enables DSP registers test routines"
         default y
-        depends on SAFETY_IEC60730B_TEST_CPU_REG && ARMV8_M_DSP
+        depends on IEC60730B_TEST_CPU_REG && ARMV8_M_DSP
 
-    config SAFETY_IEC60730B_TEST_CPU_REG_TZ
+    config IEC60730B_TEST_CPU_REG_TZ
         bool "Enables Trust Zone registers test routines"
         default y
-        depends on SAFETY_IEC60730B_TEST_CPU_REG && ARM_TRUSTZONE_M
+        depends on IEC60730B_TEST_CPU_REG && ARM_TRUSTZONE_M
 
-endif # SAFETY_IEC60730B
+endif # IEC60730B
 
