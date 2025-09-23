@@ -83,4 +83,22 @@ config APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS
 
 endif # APP_SAFETY_TASK_WATCHDOG
 
+if IEC60730B_TEST_RAM
+
+config APP_SAFETY_TEST_RAM_BUFFER_SIZE
+	int "Safety RAM test buffer size in bytes"
+	default 1024
+	help
+	  Size of the RAM buffer used for safety RAM testing.
+	  This buffer is used to perform RAM integrity tests according to IEC60730B.
+
+config APP_SAFETY_TEST_RAM_BACKUP_BUFFER_SIZE
+	int "Safety RAM test backup buffer size in bytes"
+	default 32
+	help
+	  Size of the backup buffer used during RAM safety testing.
+	  This buffer stores the original data while the main buffer is being tested.
+
+endif #IEC60730B_TEST_RAM
+
 source "Kconfig.zephyr"

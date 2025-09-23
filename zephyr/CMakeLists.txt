@@ -35,6 +35,7 @@ if(CONFIG_IEC60730B)
         )
 
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG ${IEC60730B_SRC_DIR}/core_test/cm0/register/iec60730b_cm0_reg.S)
+        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_RAM ${IEC60730B_SRC_DIR}/core_test/cm0/ram/iec60730b_cm0_ram.S)
         zephyr_library_sources(${IEC60730B_ZEPHYR_SRC_DIR}/iec60730b_test_cm0.c)
 
     # Tests for Cortex-M4/M7 CPU
@@ -51,6 +52,7 @@ if(CONFIG_IEC60730B)
 
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/register/iec60730b_cm4_cm7_reg.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG_FPU ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/register/iec60730b_cm4_cm7_reg_fpu.S)
+        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_RAM ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/ram/iec60730b_cm4_cm7_ram.S)
         zephyr_library_sources(${IEC60730B_ZEPHYR_SRC_DIR}/iec60730b_test_cm4_cm7.c)
 
     # Tests for Cortex-M33 CPU
@@ -68,6 +70,7 @@ if(CONFIG_IEC60730B)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG ${IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG_FPU ${IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg_fpu.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG_DSP ${IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg_dsp_ext.S)
+        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_RAM ${IEC60730B_SRC_DIR}/core_test/cm33/ram/iec60730b_cm33_ram.S)
         zephyr_library_sources(${IEC60730B_ZEPHYR_SRC_DIR}/iec60730b_test_cm33.c)
 
     else()

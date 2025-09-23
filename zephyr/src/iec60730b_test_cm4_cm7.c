@@ -7,8 +7,9 @@
 #include <iec60730b.h>
 #include <iec60730b_core.h>
 
-/*!
- * @brief Test CPU registers for IEC 60730 Class B compliance.
+#ifdef CONFIG_IEC60730B_TEST_CPU_REG
+/*
+ * Test CPU registers for IEC 60730 Class B compliance.
  */
 int iec60730b_test_cpu_reg(void)
 {
@@ -62,3 +63,31 @@ int iec60730b_test_cpu_reg(void)
 
     return IEC60730B_TEST_OK;
 }
+#endif /* CONFIG_IEC60730B_TEST_CPU_REG */
+
+#ifdef CONFIG_IEC60730B_TEST_RAM
+/*
+ * Test RAM memory using specified algorithm for IEC 60730 Class B compliance.
+ */
+int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t backup_size, iec60730b_test_ram_type_t type)
+{
+    tFcn march_type;
+
+    switch (type) {
+        case IEC60730B_TEST_RAM_TYPE_MARCH_C:
+            march_type = FS_CM4_CM7_RAM_SegmentMarchC;
+            break;
+        case IEC60730B_TEST_RAM_TYPE_MARCH_X:
+            march_type = FS_CM4_CM7_RAM_SegmentMarchX;
+            break;
+        default:
+            return IEC60730B_TEST_ERROR; /* Not supported */
+    }
+
+    if (FS_CM4_CM7_RAM_AfterReset((uint32_t)ram, (uint32_t)(ram + ram_size), (uint32_t)backup_size, (uint32_t)backup, march_type) == FS_FAIL_RAM){
+        return IEC60730B_TEST_RAM_ERROR;
+    }
+
+    return IEC60730B_TEST_OK;
+}
+#endif /* CONFIG_IEC60730B_TEST_RAM */

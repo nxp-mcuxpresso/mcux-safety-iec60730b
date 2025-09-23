@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <zephyr/types.h>
+
 #ifndef _IEC60730B_TEST_H_
 #define _IEC60730B_TEST_H_
 
@@ -28,6 +30,49 @@
 #define IEC60730B_TEST_CLOCK_ERROR              (-12)    /* Clock test fault */
 #define IEC60730B_TEST_PC_ERROR                 (-13)    /* Program counter test fault */
 
+/*!
+ * @brief RAM test algorithm types for IEC 60730 Class B compliance
+ * 
+ * This enumeration defines the available RAM test algorithms that can be
+ * used to detect memory faults as required by IEC 60730 Class B safety
+ * standards.
+ */
+typedef enum {
+    IEC60730B_TEST_RAM_TYPE_NONE = 0,    /*!< No RAM test algorithm */
+    /**
+     * March-C algorithm for RAM testing
+     * 
+     * Complexity: O(10n) - 10 operations per memory cell
+     * 
+     * Fault coverage:
+     * - Stuck-at faults (SAF): Detects bits permanently stuck at 0 or 1
+     * - Address decoder faults (AF): Detects incorrect address decoding
+     * - Transition faults (TF): Detects failures when changing bit values
+     * - Coupling faults (CF): Detects when one bit affects another
+     * - Bridging faults (BF): Detects short circuits between memory lines
+     * 
+     * Recommended for IEC 60730 Class B due to comprehensive fault coverage
+     */
+    IEC60730B_TEST_RAM_TYPE_MARCH_C,
+    /**
+     * March-X algorithm for RAM testing
+     * 
+     * Complexity: O(6n) - 6 operations per memory cell  
+     * 
+     * Fault coverage:
+     * - Stuck-at faults (SAF): Detects bits permanently stuck at 0 or 1
+     * - Address decoder faults (AF): Detects incorrect address decoding
+     * - Transition faults (TF): Detects failures when changing bit values
+     * - Limited coupling faults (CF): Basic coupling fault detection
+     * 
+     * Faster execution than March-C but with reduced fault coverage.
+     * Suitable when execution time is critical and basic fault detection
+     * is sufficient for the safety requirements.
+     */
+    IEC60730B_TEST_RAM_TYPE_MARCH_X
+} iec60730b_test_ram_type_t;
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -46,6 +91,23 @@ extern "C" {
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_cpu_reg(void);
+
+/*!
+ * @brief Test RAM memory for IEC 60730 Class B compliance
+ * 
+ * This function performs comprehensive RAM testing using the specified algorithm
+ * to detect memory faults such as stuck-at bits, coupling faults, and addressing
+ * faults as required by IEC 60730 Class B.
+ * 
+ * @param ram Pointer to the RAM memory area to be tested
+ * @param ram_size Size of the RAM memory area in bytes
+ * @param backup Pointer to backup memory area for data preservation
+ * @param backup_size Size of the backup memory area in bytes
+ * @param type RAM test algorithm type to be used
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t backup_size, iec60730b_test_ram_type_t type);
 
 #ifdef __cplusplus
 }

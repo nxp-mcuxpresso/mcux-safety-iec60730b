@@ -28,5 +28,12 @@ if IEC60730B
         default y
         depends on IEC60730B_TEST_CPU_REG && ARM_TRUSTZONE_M
 
-endif # IEC60730B
+    config IEC60730B_TEST_RAM
+        bool "Enables IEC60730B RAM test routine"
+        default y
+        help
+          This option enables RAM test routine for IEC60730B safety library.
+          The RAM test verifies the integrity of system memory using various
+          test patterns and algorithms to detect memory faults.
 
+endif # IEC60730B

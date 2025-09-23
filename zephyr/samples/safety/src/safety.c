@@ -21,8 +21,26 @@ static void safety_error_handling(int error_code);
 static void safety_startup_tests(void);
 static void safety_rutime_tests(void);
 
+/* Register safety_tests module for logging */
+LOG_MODULE_REGISTER(safety, CONFIG_APP_SAFETY_LOG_LEVEL);
+
+/* System initialization hook for safety tests after reset. */
+SYS_INIT(safety_init, POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
+
+/* Safety test thread definition and automatic startup configuration. */
+K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE,
+                safety_thread, NULL, NULL, NULL,
+                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 0);
+
+int safety_error_code; /* Global error code. */
+
+#ifdef CONFIG_IEC60730B_TEST_RAM
+uint8_t safety_test_ram_buffer[CONFIG_APP_SAFETY_TEST_RAM_BUFFER_SIZE];
+uint8_t safety_test_ram_backup_buffer[CONFIG_APP_SAFETY_TEST_RAM_BACKUP_BUFFER_SIZE];
+#endif /* CONFIG_IEC60730B_TEST_RAM */
+
+/* Task watchdog */
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-static void safety_task_wdt_callback(int channel_id, void *user_data);
 
 #if DT_NODE_HAS_STATUS_OKAY(DT_ALIAS(watchdog0))
 #define WDT_NODE DT_ALIAS(watchdog0)
@@ -30,39 +48,36 @@ static void safety_task_wdt_callback(int channel_id, void *user_data);
 #define WDT_NODE DT_INVALID_NODE
 #endif
 
-/* Task watchdog channel ID for safety tests monitoring. */
-int safety_task_wdt_id;
+static int safety_task_wdt_init(void);
+static void safety_task_wdt_callback(int channel_id, void *user_data);
+static int safety_task_wdt_id = -1;
+
+/* System initialization hook for task watchdog initialization. */
+SYS_INIT(safety_task_wdt_init, APPLICATION, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
+
 #endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
-
-int safety_error_code; /* Global error code. */
-
-/*!
- * @brief Register safety_tests module for logging
- */
-LOG_MODULE_REGISTER(safety, CONFIG_APP_SAFETY_LOG_LEVEL);
-
-/*!
- * @brief   System initialization hook for safety tests after reset.
- */
-SYS_INIT(safety_init, APPLICATION, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
-
-/*!
- * @brief   Safety test thread definition and automatic startup configuration.
- */
-K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE,
-                safety_thread, NULL, NULL, NULL,
-                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 0);
 
 /*******************************************************************************
  * Code
  ******************************************************************************/
 
-/*!
- * @brief   Safety initialization function executed during system startup.
+/*
+ *  Safety initialization function executed during system startup.
  */
 static int safety_init(void)
 {
+    LOG_INF("Perform startup safety tests:");
+    safety_startup_tests();
+
+    return 0;
+}
+
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
+/*
+ * Safety task watchdog initialization function executed during system startup.
+ */
+static int safety_task_wdt_init(void)
+{
     int result;
     const struct device *const hw_wdt_dev = DEVICE_DT_GET_OR_NULL(WDT_NODE);
 
@@ -85,16 +100,25 @@ static int safety_init(void)
         safety_error_handling(IEC60730B_TEST_ERROR);
     }
     LOG_INF("Task WDT channel %d added with timeout %d ms", safety_task_wdt_id, CONFIG_APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS);
-#endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
-
-    /* Perform startup safety tests */
-    safety_startup_tests();
 
     return 0;
 }
 
-/*!
- * @brief   Safety test thread function that executes periodic runtime safety tests.
+/*
+ * Callback function for task watchdog timeout events.
+ */
+static void safety_task_wdt_callback(int channel_id, void *user_data)
+{
+    ARG_UNUSED(user_data);
+    LOG_WRN("Task watchdog channel %d timeout", channel_id);
+
+    safety_error_handling(IEC60730B_TEST_WDT_ERROR);
+}
+#endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
+
+
+/*
+ * Safety test thread function that executes periodic runtime safety tests.
  */
 static void safety_thread(void *arg1, void *arg2, void *arg3)
 {
@@ -114,8 +138,8 @@ static void safety_thread(void *arg1, void *arg2, void *arg3)
     }
 }
 
-/*!
- * @brief  Safety error handling
+/*
+ * Safety error handling
  */
 static void safety_error_handling(int error_code)
 {
@@ -135,19 +159,6 @@ static void safety_error_handling(int error_code)
     sys_reboot(SYS_REBOOT_COLD);
 #endif
 }
-
-#ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-/*!
- * @brief   Callback function for task watchdog timeout events.
- */
-static void safety_task_wdt_callback(int channel_id, void *user_data)
-{
-    ARG_UNUSED(user_data);
-    LOG_WRN("Task watchdog channel %d timeout", channel_id);
-
-    safety_error_handling(IEC60730B_TEST_WDT_ERROR);
-}
-#endif
 
 /*******************************************************************************
  * ADD YOUR SAFETY TESTS HERE
@@ -169,11 +180,17 @@ static void safety_startup_tests(void)
     if(result < 0){
         safety_error_handling(result);
     }
-#endif
+#endif /* CONFIG_IEC60730B_TEST_CPU_REG */
 
-#ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-    task_wdt_feed(safety_task_wdt_id);
-#endif
+#ifdef CONFIG_IEC60730B_TEST_RAM
+    LOG_INF("Executing RAM test");
+    result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
+                                safety_test_ram_backup_buffer, sizeof(safety_test_ram_backup_buffer),
+                                IEC60730B_TEST_RAM_TYPE_MARCH_C);
+    if (result < 0) {
+        safety_error_handling(result);
+    }
+#endif /* CONFIG_IEC60730B_TEST_RAM */
 }
 
 /*!
@@ -193,7 +210,17 @@ static void safety_rutime_tests(void)
     if(result < 0){
         safety_error_handling(result);
     }
-#endif
+#endif /* CONFIG_IEC60730B_TEST_CPU_REG */
+
+#ifdef CONFIG_IEC60730B_TEST_RAM
+    LOG_INF("Executing RAM test");
+    result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
+                                safety_test_ram_backup_buffer, sizeof(safety_test_ram_backup_buffer),
+                                IEC60730B_TEST_RAM_TYPE_MARCH_X);
+    if (result < 0) {
+        safety_error_handling(result);
+    }
+#endif /* CONFIG_IEC60730B_TEST_RAM */
 
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
     task_wdt_feed(safety_task_wdt_id);
