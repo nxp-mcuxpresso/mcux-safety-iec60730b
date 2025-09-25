@@ -91,3 +91,36 @@ int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t ba
     return IEC60730B_TEST_OK;
 }
 #endif /* CONFIG_IEC60730B_TEST_RAM */
+
+#ifdef CONFIG_IEC60730B_TEST_PC
+/*
+ * Test Program Counter for IEC 60730 Class B compliance
+ */
+int iec60730b_test_pc(void)
+{
+    uint32_t pc_test_flag = 0;
+    uint32_t pc_test_in_ram;
+    int result;
+
+#ifdef CONFIG_MPU
+    /* Temporarily disable memory protection 
+     * to allow execution/modification of RAM pattern address */
+    extern void arm_core_mpu_disable(void);
+    arm_core_mpu_disable();
+#endif
+
+    if (FS_CM4_CM7_PC_Test((uint32_t)&pc_test_in_ram, FS_PC_Object, &pc_test_flag) == FS_FAIL_PC) {
+        result = IEC60730B_TEST_PC_ERROR;
+    } else {
+        result = IEC60730B_TEST_OK;
+    }
+
+#ifdef CONFIG_MPU
+    /* Re-enable memory protection */
+    extern void arm_core_mpu_enable(void);
+    arm_core_mpu_enable();
+#endif
+
+    return result;
+}
+#endif /* CONFIG_IEC60730B_TEST_PC */

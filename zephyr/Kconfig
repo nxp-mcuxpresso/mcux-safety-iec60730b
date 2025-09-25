@@ -28,6 +28,14 @@ if IEC60730B
         default y
         depends on IEC60730B_TEST_CPU_REG && ARM_TRUSTZONE_M
 
+    config IEC60730B_TEST_PC
+        bool "Enables IEC60730B Program Counter test routine"
+        default y
+        help
+          This option enables Program Counter test routine for IEC60730B safety library.
+          The PC test verifies the proper execution flow and detects program counter
+          corruption or unexpected jumps in code execution.
+
     config IEC60730B_TEST_RAM
         bool "Enables IEC60730B RAM test routine"
         default y

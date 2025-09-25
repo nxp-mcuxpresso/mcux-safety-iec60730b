@@ -86,7 +86,7 @@ extern "C" {
  * 
  * This function performs a comprehensive test of CPU registers to detect
  * stuck-at faults and ensure proper register functionality as required
- * by IEC 60730 Class B safety standards.
+ * by IEC 60730 Class B.
  * 
  * @return 0 on success, negative on failure
  */
@@ -108,6 +108,18 @@ int iec60730b_test_cpu_reg(void);
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t backup_size, iec60730b_test_ram_type_t type);
+
+/*!
+ * @brief Test Program Counter for IEC 60730 Class B compliance
+ * 
+ * This function performs Program Counter testing to detect execution flow
+ * corruption and ensure proper program execution as required by IEC 60730
+ * Class B. The test validates that the processor correctly
+ * handles jumps, calls, and returns.
+ * 
+ * @return 0 on success, negative error code on failure
+ */
+int iec60730b_test_pc(void);
 
 #ifdef __cplusplus
 }

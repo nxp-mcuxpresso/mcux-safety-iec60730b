@@ -116,7 +116,6 @@ static void safety_task_wdt_callback(int channel_id, void *user_data)
 }
 #endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
 
-
 /*
  * Safety test thread function that executes periodic runtime safety tests.
  */
@@ -174,8 +173,9 @@ static void safety_startup_tests(void)
 {
     int result;
 
+    LOG_INF("== Executing Start-up tests ==");
 #ifdef CONFIG_IEC60730B_TEST_CPU_REG
-    LOG_INF("Executing CPU Registers tests");
+    LOG_INF("CPU Registers test");
     result = iec60730b_test_cpu_reg();
     if(result < 0){
         safety_error_handling(result);
@@ -183,7 +183,7 @@ static void safety_startup_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_CPU_REG */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
-    LOG_INF("Executing RAM test");
+    LOG_INF("RAM test");
     result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
                                 safety_test_ram_backup_buffer, sizeof(safety_test_ram_backup_buffer),
                                 IEC60730B_TEST_RAM_TYPE_MARCH_C);
@@ -191,6 +191,14 @@ static void safety_startup_tests(void)
         safety_error_handling(result);
     }
 #endif /* CONFIG_IEC60730B_TEST_RAM */
+
+#if CONFIG_IEC60730B_TEST_PC
+    LOG_INF("PC test");
+    result = iec60730b_test_pc();
+    if (result < 0) {
+        safety_error_handling(result);
+    }
+#endif /* CONFIG_IEC60730B_TEST_PC */
 }
 
 /*!
@@ -204,8 +212,9 @@ static void safety_rutime_tests(void)
 {
    int result;
 
+    LOG_INF("== Executing Run-time tests ==");
 #ifdef CONFIG_IEC60730B_TEST_CPU_REG
-    LOG_INF("Executing CPU Registers tests");
+    LOG_INF("CPU Registers test");
     result = iec60730b_test_cpu_reg();
     if(result < 0){
         safety_error_handling(result);
@@ -213,7 +222,7 @@ static void safety_rutime_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_CPU_REG */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
-    LOG_INF("Executing RAM test");
+    LOG_INF("RAM test");
     result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
                                 safety_test_ram_backup_buffer, sizeof(safety_test_ram_backup_buffer),
                                 IEC60730B_TEST_RAM_TYPE_MARCH_X);
@@ -221,6 +230,14 @@ static void safety_rutime_tests(void)
         safety_error_handling(result);
     }
 #endif /* CONFIG_IEC60730B_TEST_RAM */
+
+#ifdef CONFIG_IEC60730B_TEST_PC
+    LOG_INF("PC test");
+    result = iec60730b_test_pc();
+    if (result < 0) {
+        safety_error_handling(result);
+    }
+#endif /* CONFIG_IEC60730B_TEST_PC */
 
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
     task_wdt_feed(safety_task_wdt_id);
