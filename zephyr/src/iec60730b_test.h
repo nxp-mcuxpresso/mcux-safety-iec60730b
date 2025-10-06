@@ -121,6 +121,40 @@ int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t ba
  */
 int iec60730b_test_pc(void);
 
+/*!
+ * @brief Initialize stack testing for IEC 60730 Class B compliance
+ * 
+ * This function initializes the stack testing mechanism by setting up
+ * guard patterns and boundaries to detect stack overflow and underflow
+ * conditions as required by IEC 60730 Class B.
+ * 
+ * @param stack_start Starting address of the stack memory area
+ * @param stack_size Size of the stack memory area in bytes
+ * @param guard_size Size of the guard area in bytes. The guard zones provide additional protection
+ *                   by reserving memory before and after the actual thread stack.
+ * @param guard_pattern Pattern value used for guard area initialization
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_stack_init(void *stack_start, size_t stack_size, size_t guard_size, uint32_t guard_pattern);
+
+/*!
+ * @brief Test stack integrity for IEC 60730 Class B compliance
+ * 
+ * This function performs stack integrity testing by checking guard patterns
+ * and boundaries to detect stack overflow and underflow conditions as
+ * required by IEC 60730 Class B.
+ * 
+ * @param stack_start Starting address of the stack memory area
+ * @param stack_size Size of the stack memory area in bytes
+ * @param guard_size Size of the guard area in bytes. The guard zones provide additional protection
+ *                   by reserving memory before and after the actual thread stack.
+ * @param guard_pattern Pattern value used for guard area verification
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size, uint32_t guard_pattern);
+
 #ifdef __cplusplus
 }
 #endif

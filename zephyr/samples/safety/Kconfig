@@ -101,4 +101,25 @@ config APP_SAFETY_TEST_RAM_BACKUP_BUFFER_SIZE
 
 endif #IEC60730B_TEST_RAM
 
+if IEC60730B_TEST_STACK
+
+config APP_SAFETY_TEST_STACK_GUARD_SIZE
+	int "Stack test guard size for overflow detection"
+	default 32
+	help
+	  Size in bytes of the guard areas placed before and after the stack
+	  for overflow detection. The guard areas are filled with a test pattern
+	  to detect stack overflow conditions.
+	  Must be aligned to pointer size (4 bytes).
+
+config APP_SAFETY_TEST_STACK_GUARD_PATTERN
+	hex "Stack test gaurd pattern for overflow detection"
+	default 0xA5A5A5A5
+	help
+	  32-bit pattern used to fill stack guard areas for overflow detection.
+	  The pattern should be chosen to be easily detectable when corrupted
+	  and unlikely to occur naturally in normal program execution.
+
+endif #IEC60730B_TEST_STACK
+
 source "Kconfig.zephyr"

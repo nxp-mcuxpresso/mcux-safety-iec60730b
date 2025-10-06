@@ -27,10 +27,48 @@ LOG_MODULE_REGISTER(safety, CONFIG_APP_SAFETY_LOG_LEVEL);
 /* System initialization hook for safety tests after reset. */
 SYS_INIT(safety_init, POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
 
+/*
+ * Safety thread stack and creation configuration.
+ * 
+ * When CONFIG_IEC60730B_TEST_STACK is enabled, creates a custom stack with guard zones
+ * for stack overflow detection testing. The guard zones provide additional protection
+ * by reserving memory before and after the actual thread stack.
+ * 
+ * When disabled, uses the standard Zephyr thread definition macro for simpler
+ * thread creation without custom stack management.
+ */
+#if CONFIG_IEC60730B_TEST_STACK
+
+static K_THREAD_STACK_DEFINE(safety_stack, (CONFIG_APP_SAFETY_THREAD_STACK_SIZE + 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE));
+#define SAFETY_THREAD_STACK             &safety_stack[CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE]
+#define SAFETY_THREAD_STACK_SIZE        (K_THREAD_STACK_SIZEOF(safety_stack) - 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE)
+
+static struct k_thread safety_thread_data;
+static void safety_thread_create(void)
+{
+    k_tid_t thread_id;
+
+    thread_id = k_thread_create(&safety_thread_data,
+                                SAFETY_THREAD_STACK,
+                                SAFETY_THREAD_STACK_SIZE,
+                                safety_thread,
+                                NULL, NULL, NULL,
+                                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0,
+                                K_NO_WAIT);
+
+    if (thread_id == NULL) {
+        LOG_ERR("Failed to create safety thread");
+        safety_error_handling(IEC60730B_TEST_ERROR);
+    }
+
+    k_thread_name_set(thread_id, "safety");
+}
+#else
 /* Safety test thread definition and automatic startup configuration. */
 K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE,
                 safety_thread, NULL, NULL, NULL,
-                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 0);
+                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, K_NO_WAIT);
+#endif
 
 int safety_error_code; /* Global error code. */
 
@@ -68,6 +106,10 @@ static int safety_init(void)
 {
     LOG_INF("Perform startup safety tests:");
     safety_startup_tests();
+
+#ifdef CONFIG_IEC60730B_TEST_STACK
+    safety_thread_create();
+#endif
 
     return 0;
 }
@@ -125,7 +167,7 @@ static void safety_thread(void *arg1, void *arg2, void *arg3)
     ARG_UNUSED(arg2);
     ARG_UNUSED(arg3);
 
-    LOG_INF("Safety test thread started automatically");
+    LOG_INF("Safety test thread started");
 
     /* Thread function runs indefinitely */
     while (1) {
@@ -162,8 +204,8 @@ static void safety_error_handling(int error_code)
 /*******************************************************************************
  * ADD YOUR SAFETY TESTS HERE
  ******************************************************************************/
-/*!
- * @brief   Executes safety tests during system startup.
+/*
+ * Executes safety tests during system startup.
  *
  * This function performs various safety tests that are required to be executed
  * during system initialization.
@@ -192,17 +234,28 @@ static void safety_startup_tests(void)
     }
 #endif /* CONFIG_IEC60730B_TEST_RAM */
 
-#if CONFIG_IEC60730B_TEST_PC
+#ifdef CONFIG_IEC60730B_TEST_PC
     LOG_INF("PC test");
     result = iec60730b_test_pc();
     if (result < 0) {
         safety_error_handling(result);
     }
 #endif /* CONFIG_IEC60730B_TEST_PC */
+
+#ifdef CONFIG_IEC60730B_TEST_STACK
+    LOG_INF("Stack test initialization");
+    result = iec60730b_test_stack_init(SAFETY_THREAD_STACK,
+                                       SAFETY_THREAD_STACK_SIZE,
+                                       CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE,
+                                       CONFIG_APP_SAFETY_TEST_STACK_GUARD_PATTERN);
+    if (result < 0) {
+        safety_error_handling(result);
+    }
+#endif /* CONFIG_IEC60730B_TEST_STACK */
 }
 
-/*!
- * @brief   Executes safety tests during system runtime.
+/*
+ * Executes safety tests during system runtime.
  *
  * This function performs various safety tests that are required to be executed
  * during normal system operation.
@@ -238,6 +291,17 @@ static void safety_rutime_tests(void)
         safety_error_handling(result);
     }
 #endif /* CONFIG_IEC60730B_TEST_PC */
+
+#ifdef CONFIG_IEC60730B_TEST_STACK
+    LOG_INF("Stack test");
+    result = iec60730b_test_stack(SAFETY_THREAD_STACK,
+                                  SAFETY_THREAD_STACK_SIZE,
+                                  CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE,
+                                  CONFIG_APP_SAFETY_TEST_STACK_GUARD_PATTERN);
+    if (result < 0) {
+        safety_error_handling(result);
+    }
+#endif /* CONFIG_IEC60730B_TEST_STACK */
 
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
     task_wdt_feed(safety_task_wdt_id);

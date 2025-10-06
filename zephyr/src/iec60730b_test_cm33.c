@@ -170,3 +170,27 @@ int iec60730b_test_pc(void)
     return result;
 }
 #endif /* CONFIG_IEC60730B_TEST_PC */
+
+#ifdef CONFIG_IEC60730B_TEST_STACK
+/*
+ * Initialize stack testing for IEC 60730 Class B compliance
+ */
+int iec60730b_test_stack_init(void *stack_start, size_t stack_size, size_t guard_size, uint32_t guard_pattern)
+{
+    FS_CM33_STACK_Init(guard_pattern, (uint32_t)stack_start - sizeof(guard_pattern), (uint32_t)stack_start + stack_size, guard_size);
+
+    return IEC60730B_TEST_OK;
+}
+
+/*
+ * @brief Test stack integrity for IEC 60730 Class B compliance
+ */
+int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size, uint32_t guard_pattern)
+{
+    if(FS_CM33_STACK_Test(guard_pattern, (uint32_t)stack_start - sizeof(guard_pattern), (uint32_t)stack_start + stack_size, guard_size) == FS_FAIL_STACK) {
+        return IEC60730B_TEST_STACK_ERROR;
+    }
+
+    return IEC60730B_TEST_OK;
+}
+#endif /* CONFIG_IEC60730B_TEST_STACK */
