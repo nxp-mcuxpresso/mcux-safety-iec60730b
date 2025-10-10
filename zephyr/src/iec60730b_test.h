@@ -30,6 +30,7 @@
 #define IEC60730B_TEST_CLOCK_ERROR              (-12)    /* Clock test fault */
 #define IEC60730B_TEST_PC_ERROR                 (-13)    /* Program counter test fault */
 
+#ifdef CONFIG_IEC60730B_TEST_RAM
 /*!
  * @brief RAM test algorithm types for IEC 60730 Class B compliance
  * 
@@ -71,6 +72,24 @@ typedef enum {
      */
     IEC60730B_TEST_RAM_TYPE_MARCH_X
 } iec60730b_test_ram_type_t;
+#endif
+
+#ifdef CONFIG_IEC60730B_TEST_FLASH
+/*!
+ * @brief Flash CRC data type for IEC 60730 Class B compliance
+ * 
+ * This type definition provides the appropriate CRC data type for flash
+ * memory integrity testing. 
+ */
+#ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
+typedef uint32_t iec60730b_flash_crc_t;
+#elif CONFIG_IEC60730B_TEST_FLASH_CRC16
+typedef uint16_t iec60730b_flash_crc_t;
+#else
+#error "Invalid Flash CRC configuration."
+#endif
+#endif
+
 
 
 #ifdef __cplusplus
@@ -80,7 +99,7 @@ extern "C" {
 /*******************************************************************************
  * API
  ******************************************************************************/
-
+#ifdef CONFIG_IEC60730B_TEST_CPU_REG
 /*!
  * @brief Test CPU registers for IEC 60730 Class B compliance
  * 
@@ -91,7 +110,9 @@ extern "C" {
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_cpu_reg(void);
+#endif
 
+#ifdef CONFIG_IEC60730B_TEST_RAM
 /*!
  * @brief Test RAM memory for IEC 60730 Class B compliance
  * 
@@ -108,7 +129,9 @@ int iec60730b_test_cpu_reg(void);
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t backup_size, iec60730b_test_ram_type_t type);
+#endif
 
+#ifdef CONFIG_IEC60730B_TEST_PC
 /*!
  * @brief Test Program Counter for IEC 60730 Class B compliance
  * 
@@ -120,7 +143,9 @@ int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t ba
  * @return 0 on success, negative error code on failure
  */
 int iec60730b_test_pc(void);
+#endif
 
+#ifdef CONFIG_IEC60730B_TEST_STACK
 /*!
  * @brief Initialize stack testing for IEC 60730 Class B compliance
  * 
@@ -154,6 +179,25 @@ int iec60730b_test_stack_init(void *stack_start, size_t stack_size, size_t guard
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size, uint32_t guard_pattern);
+#endif
+
+#ifdef CONFIG_IEC60730B_TEST_FLASH
+/*!
+ * @brief Test flash memory using CRC for IEC 60730 Class B compliance
+ * 
+ * This function performs flash memory integrity testing using CRC checksum
+ * calculation to detect memory corruption and ensure data integrity as
+ * required by IEC 60730 Class B. The test calculates a CRC checksum over
+ * the specified memory region and compares it against the expected value.
+ * 
+ * @param start Starting address of the flash memory area to test
+ * @param size Size of the flash memory area in bytes
+ * @param crc_expected Expected CRC checksum value for comparison
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_flash_crc(const void *start, size_t size, iec60730b_flash_crc_t crc_expected);
+#endif
 
 #ifdef __cplusplus
 }

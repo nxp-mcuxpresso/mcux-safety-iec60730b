@@ -75,7 +75,41 @@ if IEC60730B
         help
           Enable flash memory test routines for the IEC60730B safety library.
           This test verifies the integrity of flash memory contents
-          using checksum or CRC methods.
+          using CRC methods.
+
+    if IEC60730B_TEST_FLASH
+
+    choice IEC60730B_TEST_FLASH_CRC
+        prompt "CRC Algorithm Type"
+        default IEC60730B_TEST_FLASH_CRC16 if CPU_CORTEX_M0PLUS
+        default IEC60730B_TEST_FLASH_CRC32
+        help
+          Select the CRC algorithm type for flash memory integrity testing.
+          Different CRC types provide different levels of error detection
+          capability and performance characteristics.
+
+    config IEC60730B_TEST_FLASH_CRC16
+        bool "CRC-16"
+        help
+          16-bit CRC algorithm (CCITT - 0x1021).
+
+    config IEC60730B_TEST_FLASH_CRC32
+        bool "CRC-32"
+        help
+          32-bit CRC algorithm (MPEG-2 - 0x04C11DB7).
+
+    endchoice
+
+    config IEC60730B_TEST_FLASH_CRC_SEED
+        hex "CRC seed value for flash test"
+        default 0xFFFFFFFF
+        help
+          Initial seed value for CRC calculation.
+          All 0xFF is standard for most CRC implementations.
+          Must match the seed used when pre-calculating the
+          expected CRC value.
+
+    endif #IEC60730B_TEST_FLASH
 
     config IEC60730B_TEST_STACK
         bool "IEC60730B Stack Overflow test routines"
