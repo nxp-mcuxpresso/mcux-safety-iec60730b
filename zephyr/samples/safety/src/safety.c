@@ -37,11 +37,12 @@ SYS_INIT(safety_init, POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
  * When disabled, uses the standard Zephyr thread definition macro for simpler
  * thread creation without custom stack management.
  */
-#if CONFIG_IEC60730B_TEST_STACK
+#ifdef CONFIG_IEC60730B_TEST_STACK
 
 static K_THREAD_STACK_DEFINE(safety_stack, (CONFIG_APP_SAFETY_THREAD_STACK_SIZE + 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE));
-#define SAFETY_THREAD_STACK             &safety_stack[CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE]
-#define SAFETY_THREAD_STACK_SIZE        (K_THREAD_STACK_SIZEOF(safety_stack) - 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE)
+#define SAFETY_THREAD_STACK                 &safety_stack[CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE]
+#define SAFETY_THREAD_STACK_SIZE            (sizeof(safety_stack) - 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE)
+#define SAFETY_THREAD_STACK_WRITABLE_SIZE   (K_THREAD_STACK_SIZEOF(safety_stack) - 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE) /* Thread writable stack buffer size */
 
 static struct k_thread safety_thread_data;
 static void safety_thread_create(void)
@@ -50,7 +51,7 @@ static void safety_thread_create(void)
 
     thread_id = k_thread_create(&safety_thread_data,
                                 SAFETY_THREAD_STACK,
-                                SAFETY_THREAD_STACK_SIZE,
+                                SAFETY_THREAD_STACK_WRITABLE_SIZE,
                                 safety_thread,
                                 NULL, NULL, NULL,
                                 CONFIG_APP_SAFETY_THREAD_PRIORITY, 0,
@@ -67,7 +68,7 @@ static void safety_thread_create(void)
 /* Safety test thread definition and automatic startup configuration. */
 K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE,
                 safety_thread, NULL, NULL, NULL,
-                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, K_NO_WAIT);
+                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 0);
 #endif
 
 int safety_error_code; /* Global error code. */
@@ -264,6 +265,7 @@ static void safety_startup_tests(void)
     int result;
 
     LOG_INF("== Executing Start-up tests ==");
+
 #ifdef CONFIG_IEC60730B_TEST_CPU_REG
     LOG_INF("CPU Registers test");
     result = iec60730b_test_cpu_reg();
@@ -324,6 +326,7 @@ static void safety_rutime_tests(void)
    int result;
 
     LOG_INF("== Executing Run-time tests ==");
+
 #ifdef CONFIG_IEC60730B_TEST_CPU_REG
     LOG_INF("CPU Registers test");
     result = iec60730b_test_cpu_reg();

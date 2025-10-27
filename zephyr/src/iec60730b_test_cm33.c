@@ -144,8 +144,8 @@ int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t ba
  */
 int iec60730b_test_pc(void)
 {
+    static uint32_t pc_test_in_ram;
     uint32_t pc_test_flag = 0;
-    uint32_t pc_test_in_ram;
     int result;
 
 #ifdef CONFIG_MPU

@@ -88,9 +88,7 @@ typedef uint16_t iec60730b_flash_crc_t;
 #else
 #error "Invalid Flash CRC configuration."
 #endif
-#endif
-
-
+#endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef __cplusplus
 extern "C" {

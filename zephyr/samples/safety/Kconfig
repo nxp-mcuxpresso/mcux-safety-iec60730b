@@ -105,7 +105,7 @@ if IEC60730B_TEST_STACK
 
 config APP_SAFETY_TEST_STACK_GUARD_SIZE
 	int "Stack test guard size for overflow detection"
-	default 32
+	default 128
 	help
 	  Size in bytes of the guard areas placed before and after the stack
 	  for overflow detection. The guard areas are filled with a test pattern
