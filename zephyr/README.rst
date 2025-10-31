@@ -27,13 +27,17 @@ Follow these steps to set up a development environment on your machine.
             west update
 
     * Included Zephyr iec60730b module - if you already have your Zephyr environment set up.
-        * To include iec60730b module, update your Zephyr's ``west.yml`` file::
+        * To include Zephyr iec60730b module, add the following entry to a Zephyr submanifest (e.g. ``zephyr/submanifests/iec60730b.yaml``), or
+          add it as a West project in your project's ``west.yaml`` manifest:
 
-            projects:
-            - name: safety_iec60730b
-              url: <iec60730b_repository_url>
-              revision: <iec60730b_revision_or_branch>
-              path: modules/safety/iec60730b
+            .. code-block:: yaml
+
+               manifest:
+                 projects:
+                   - name: safety_iec60730b
+                     url: <iec60730b_repository_url>
+                     revision: <iec60730b_revision_or_branch>
+                     path: modules/safety/iec60730b
 
         * Then update module::
 
