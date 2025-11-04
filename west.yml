@@ -27,7 +27,7 @@ manifest:
   projects:
     - name: zephyr
       remote: zephyrproject-rtos
-      revision: v4.3.0-rc1
+      revision: v4.3.0-rc2
       import:
         name-allowlist:
           - cmsis_6    # required by the ARM port for Cortex-M

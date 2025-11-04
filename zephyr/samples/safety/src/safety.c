@@ -9,6 +9,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/watchdog.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/task_wdt/task_wdt.h>
 #include <zephyr/sys/reboot.h>
 
@@ -55,7 +56,7 @@ static void safety_thread_create(void)
                                 safety_thread,
                                 NULL, NULL, NULL,
                                 CONFIG_APP_SAFETY_THREAD_PRIORITY, 0,
-                                K_NO_WAIT);
+                                K_MSEC(100));  /* 100ms startup delay to start after the main thread*/
 
     if (thread_id == NULL) {
         LOG_ERR("Failed to create safety thread");
@@ -68,7 +69,7 @@ static void safety_thread_create(void)
 /* Safety test thread definition and automatic startup configuration. */
 K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE,
                 safety_thread, NULL, NULL, NULL,
-                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 0);
+                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 100);
 #endif
 
 int safety_error_code; /* Global error code. */
@@ -125,6 +126,13 @@ const uint32_t safety_test_flash_buffer[256] = {
 #endif
 
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
+
+#ifdef CONFIG_IEC60730B_TEST_DIO
+
+/* Use the sw0 button configured in main.c */
+static const struct gpio_dt_spec test_gpio_input = GPIO_DT_SPEC_GET_OR(DT_ALIAS(sw0), gpios, {0});
+
+#endif /* CONFIG_IEC60730B_TEST_DIO */
 
 /* Task watchdog */
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
@@ -373,6 +381,15 @@ static void safety_rutime_tests(void)
         safety_error_handling(result);
     }
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
+
+#ifdef CONFIG_IEC60730B_TEST_DIO
+    /* You can fail the input test by pressing and holding the sw0 button */
+    LOG_INF("DIO Input test");
+    result = iec60730b_test_dio_input(test_gpio_input.port, test_gpio_input.pin, (test_gpio_input.dt_flags & GPIO_ACTIVE_LOW ? 1 : 0));
+    if (result < 0) {
+        safety_error_handling(result);
+    }
+#endif /* CONFIG_IEC60730B_TEST_DIO */
 
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
     task_wdt_feed(safety_task_wdt_id);

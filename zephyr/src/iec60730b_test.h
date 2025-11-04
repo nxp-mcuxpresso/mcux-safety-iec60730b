@@ -4,6 +4,7 @@
  */
 
 #include <zephyr/types.h>
+#include <zephyr/drivers/gpio.h>
 
 #ifndef _IEC60730B_TEST_H_
 #define _IEC60730B_TEST_H_
@@ -29,6 +30,7 @@
 #define IEC60730B_TEST_STACK_ERROR              (-11)    /* Stack test fault */
 #define IEC60730B_TEST_CLOCK_ERROR              (-12)    /* Clock test fault */
 #define IEC60730B_TEST_PC_ERROR                 (-13)    /* Program counter test fault */
+#define IEC60730B_TEST_DIO_ERROR                (-14)    /* Digital Input/Output test fault */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
 /*!
@@ -196,6 +198,24 @@ int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size
  */
 int iec60730b_test_flash_crc(const void *start, size_t size, iec60730b_flash_crc_t crc_expected);
 #endif
+
+#ifdef CONFIG_IEC60730B_TEST_DIO
+/*!
+ * @brief Test digital input pin for IEC 60730 Class B compliance
+ * 
+ * This function performs digital input/output testing by reading the state
+ * of a specified GPIO pin and comparing it against the expected value to
+ * detect hardware faults as required by IEC 60730 Class B.
+ * 
+ * @param port Pointer to the GPIO device structure
+ * @param pin GPIO pin number to test
+ * @param pin_expected_value Expected raw state of the pin (true for high, false for low)
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_dio_input(const struct device *port, gpio_pin_t pin, bool pin_expected_value);
+#endif
+
 
 #ifdef __cplusplus
 }
