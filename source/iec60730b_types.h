@@ -474,7 +474,7 @@ typedef struct {
   volatile const uint32_t RL;                          /**< ADC Data Result Registers, offset: 0x74 */
   volatile const uint32_t RM;                          /**< ADC Data Result Registers, offset: 0x78 */
   volatile const uint32_t RN;                          /**< ADC Data Result Registers, offset: 0x7C */
-  volatile const uint32_t RO;                          /**< ADC Data Result Registers, offset: 0x80 */
+  volatile const uint32_t _RO;                          /**< ADC Data Result Registers, offset: 0x80 */
   volatile const uint32_t RP;                          /**< ADC Data Result Registers, offset: 0x84 */
   volatile uint32_t CV1;                               /**< Compare Value Registers, offset: 0x88 */
   volatile uint32_t CV2;                               /**< Compare Value Registers, offset: 0x8C */
