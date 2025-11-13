@@ -31,14 +31,10 @@ static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET(SW0_NODE, gpios);
 static struct gpio_callback button_cb_data;
 
 
+/* GPIO interrupt callback function for button press events. */
 static void button_pressed(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 {
 	printf("Button pressed.\n");
-	{ //DM
-		int pin_value = gpio_pin_get_raw(button.port, button.pin); 
-		printk ("Button pin raw level: %d\n", pin_value);
-
-	}
 }
 
 /* System initialization hook for GPIO initialization, to ensure that pins are initialized before safety runtime tests start */
@@ -79,7 +75,7 @@ static int main_task_gpio_init(void)
 
 	return 0;
 }
-SYS_INIT(main_task_gpio_init, APPLICATION, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
+SYS_INIT(main_task_gpio_init, POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
 
 int main(void)
 {
@@ -94,13 +90,6 @@ int main(void)
 
 		led_state = !led_state;
 		printk("LED state: %s\n", led_state ? "ON" : "OFF");
-		{//DM
-			int pin_value = gpio_pin_get_raw(led.port, led.pin); 
-			printk ("Led pin raw level: %d\n", pin_value);
-			pin_value = gpio_pin_get_raw(button.port, button.pin);
-			printk ("Button pin raw level: %d\n", pin_value);
-
-		}
 		k_msleep(SLEEP_TIME_MS);
 	}
 	return 0;

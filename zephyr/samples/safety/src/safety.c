@@ -56,7 +56,7 @@ static void safety_thread_create(void)
                                 safety_thread,
                                 NULL, NULL, NULL,
                                 CONFIG_APP_SAFETY_THREAD_PRIORITY, 0,
-                                K_MSEC(10));  /* Startup is delayed to begin after GPIO configuration in main.c*/
+                                K_NO_WAIT);
 
     if (thread_id == NULL) {
         LOG_ERR("Failed to create safety thread");
@@ -69,7 +69,7 @@ static void safety_thread_create(void)
 /* Safety test thread definition and automatic startup configuration. */
 K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE,
                 safety_thread, NULL, NULL, NULL,
-                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 10);
+                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 0);
 #endif
 
 int safety_error_code; /* Global error code. */
