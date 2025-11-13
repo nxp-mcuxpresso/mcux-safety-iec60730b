@@ -135,7 +135,7 @@ FS_RESULT FS_DIO_Output_IMXRT(fs_dio_test_imx_t *pTestedPin, uint32_t delay)
     volatile fs_gpio_imxrt_t *pGpio = (fs_gpio_imxrt_t *)pTestedPin->gpio;
 
     uint32_t portMask           = (1UL << pTestedPin->pinNum);
-    volatile uint32_t portValue = (pGpio->PSR & portMask);
+    volatile uint32_t portValue = (pGpio->DR & portMask);
     volatile uint32_t i;
 
     /* Check if pin is configured as output */
@@ -151,7 +151,7 @@ FS_RESULT FS_DIO_Output_IMXRT(fs_dio_test_imx_t *pTestedPin, uint32_t delay)
     }
 
     /* Check if pin is set */
-    if ((pGpio->PSR & portMask) == 0U)
+    if ((pGpio->DR & portMask) == 0U)
     {
       if(st == FS_PASS){ /* To prevent rewrite of previsous error */
         st = FS_FAIL_DIO_NOT_SET;
@@ -166,7 +166,7 @@ FS_RESULT FS_DIO_Output_IMXRT(fs_dio_test_imx_t *pTestedPin, uint32_t delay)
     }
 
     /* Check if pin is cleared = short to VCC circuit */
-    if ((pGpio->PSR & portMask) != 0U)
+    if ((pGpio->DR & portMask) != 0U)
     {
        if(st == FS_PASS){ /* To prevent rewrite of previsous error */
         st = FS_FAIL_DIO_NOT_CLEAR;
