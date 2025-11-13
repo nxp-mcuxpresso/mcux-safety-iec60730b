@@ -56,7 +56,7 @@ static void safety_thread_create(void)
                                 safety_thread,
                                 NULL, NULL, NULL,
                                 CONFIG_APP_SAFETY_THREAD_PRIORITY, 0,
-                                K_MSEC(100));  /* 100ms startup delay to start after the main thread*/
+                                K_MSEC(10));  /* Startup is delayed to begin after GPIO configuration in main.c*/
 
     if (thread_id == NULL) {
         LOG_ERR("Failed to create safety thread");
@@ -69,7 +69,7 @@ static void safety_thread_create(void)
 /* Safety test thread definition and automatic startup configuration. */
 K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE,
                 safety_thread, NULL, NULL, NULL,
-                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 100);
+                CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 10);
 #endif
 
 int safety_error_code; /* Global error code. */
@@ -130,7 +130,9 @@ const uint32_t safety_test_flash_buffer[256] = {
 #ifdef CONFIG_IEC60730B_TEST_DIO
 
 /* Use the sw0 button configured in main.c */
-static const struct gpio_dt_spec test_gpio_input = GPIO_DT_SPEC_GET_OR(DT_ALIAS(sw0), gpios, {0});
+static const struct gpio_dt_spec test_gpio_input = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
+/* Use the led0 configured in main.c */
+static const struct gpio_dt_spec test_gpio_output = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 
 #endif /* CONFIG_IEC60730B_TEST_DIO */
 
@@ -242,7 +244,7 @@ static void safety_thread(void *arg1, void *arg2, void *arg3)
 static void safety_error_handling(int error_code)
 {
     safety_error_code = error_code;
-    LOG_ERR("Safety error detected: 0x%08x", safety_error_code);
+    LOG_ERR("Safety error detected: %d", safety_error_code);
 
 #ifdef CONFIG_APP_SAFETY_ERROR_ACTION_INFINITE_LOOP
     LOG_INF("Entering infinite loop");
@@ -383,9 +385,16 @@ static void safety_rutime_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_DIO
-    /* You can fail the input test by pressing and holding the sw0 button */
+
+    /* NOTE: Test is failed if the sw0 button pressed & hold*/
     LOG_INF("DIO Input test");
-    result = iec60730b_test_dio_input(test_gpio_input.port, test_gpio_input.pin, (test_gpio_input.dt_flags & GPIO_ACTIVE_LOW ? 1 : 0));
+    result = iec60730b_test_dio_input(test_gpio_input.port, test_gpio_input.pin, 1);
+    if (result < 0) {
+        safety_error_handling(result);
+    }
+
+    LOG_INF("DIO Output test");
+    result = iec60730b_test_dio_output(test_gpio_output.port, test_gpio_output.pin);
     if (result < 0) {
         safety_error_handling(result);
     }

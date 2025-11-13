@@ -90,8 +90,6 @@ if(CONFIG_IEC60730B)
         ${IEC60730B_ZEPHYR_SRC_DIR}
     )
 
-    zephyr_library_sources(${IEC60730B_ZEPHYR_SRC_DIR}/iec60730b_test.c)
-
     if(CONFIG_IEC60730B_TEST_AIO)
         zephyr_library_sources(${IEC60730B_SRC_DIR}/common_test/aio/iec60730b_aio.c)
         set_source_files_properties(${IEC60730B_SRC_DIR}/common_test/aio/iec60730b_aio.c PROPERTIES COMPILE_OPTIONS "-Wno-parentheses") # disable warning
@@ -103,7 +101,8 @@ if(CONFIG_IEC60730B)
     endif()
 
     zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CLOCK ${IEC60730B_SRC_DIR}/common_test/clock/iec60730b_clock.c)
-    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_DIO ${IEC60730B_SRC_DIR}/common_test/dio/iec60730b_dio.c
+    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_DIO ${IEC60730B_ZEPHYR_SRC_DIR}/iec60730b_test_dio.c
+                                                           ${IEC60730B_SRC_DIR}/common_test/dio/iec60730b_dio.c
                                                            ${IEC60730B_SRC_DIR}/common_test/dio/iec60730b_dio_ext.c )
     zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_TSI ${IEC60730B_SRC_DIR}/common_test/tsi/iec60730b_tsi.c)
     zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_WDOG ${IEC60730B_SRC_DIR}/common_test/wdog/iec60730b_wdog.c)

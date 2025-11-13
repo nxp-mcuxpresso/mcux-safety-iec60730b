@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/types.h>
-#include <zephyr/drivers/gpio.h>
-
 #ifndef _IEC60730B_TEST_H_
 #define _IEC60730B_TEST_H_
+
+#include <zephyr/types.h>
+#include <zephyr/drivers/gpio.h>
 
 /*******************************************************************************
  * Definitions
@@ -110,7 +110,7 @@ extern "C" {
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_cpu_reg(void);
-#endif
+#endif /* CONFIG_IEC60730B_TEST_CPU_REG */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
 /*!
@@ -129,7 +129,7 @@ int iec60730b_test_cpu_reg(void);
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t backup_size, iec60730b_test_ram_type_t type);
-#endif
+#endif /* CONFIG_IEC60730B_TEST_RAM */
 
 #ifdef CONFIG_IEC60730B_TEST_PC
 /*!
@@ -143,7 +143,7 @@ int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t ba
  * @return 0 on success, negative error code on failure
  */
 int iec60730b_test_pc(void);
-#endif
+#endif /* CONFIG_IEC60730B_TEST_PC */
 
 #ifdef CONFIG_IEC60730B_TEST_STACK
 /*!
@@ -179,7 +179,7 @@ int iec60730b_test_stack_init(void *stack_start, size_t stack_size, size_t guard
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size, uint32_t guard_pattern);
-#endif
+#endif /* CONFIG_IEC60730B_TEST_STACK */
 
 #ifdef CONFIG_IEC60730B_TEST_FLASH
 /*!
@@ -197,13 +197,13 @@ int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_flash_crc(const void *start, size_t size, iec60730b_flash_crc_t crc_expected);
-#endif
+#endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_DIO
 /*!
  * @brief Test digital input pin for IEC 60730 Class B compliance
  * 
- * This function performs digital input/output testing by reading the state
+ * This function performs digital input testing by reading the state
  * of a specified GPIO pin and comparing it against the expected value to
  * detect hardware faults as required by IEC 60730 Class B.
  * 
@@ -214,8 +214,21 @@ int iec60730b_test_flash_crc(const void *start, size_t size, iec60730b_flash_crc
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_dio_input(const struct device *port, gpio_pin_t pin, bool pin_expected_value);
-#endif
 
+/*!
+ * @brief Test digital output pin for IEC 60730 Class B compliance
+ * 
+ * This function performs digital output testing by controlling the state
+ * of a specified GPIO pin to detect hardware faults as required by 
+ * IEC 60730 Class B.
+ * 
+ * @param port Pointer to the GPIO device structure
+ * @param pin GPIO pin number to test
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin);
+#endif /* CONFIG_IEC60730B_TEST_DIO */
 
 #ifdef __cplusplus
 }
