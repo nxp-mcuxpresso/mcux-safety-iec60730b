@@ -17,6 +17,7 @@
  * @brief Error code definitions for IEC 60730 Class B safety test failures
  */
 #define IEC60730B_TEST_OK                       (0)      /* No error */
+#define IEC60730B_TEST_NOT_SUPPORTED            (1)      /* Not supported */
 #define IEC60730B_TEST_ERROR                    (-1)     /* General error */
 #define IEC60730B_TEST_CPU_REG_ERROR            (-2)     /* CPU registers test fault */
 #define IEC60730B_TEST_CPU_REG_PRIMASK_ERROR    (-3)     /* PRIMASK test fault */

@@ -61,16 +61,19 @@ int iec60730b_test_dio_input(const struct device *port, gpio_pin_t pin, bool pin
     if (FS_DIO_Input(&tested_pin, (bool_t)pin_expected_value) != FS_PASS) {
         return IEC60730B_TEST_DIO_ERROR;
     }
-#else /* Use Zephyr general API */
+#elif defined(CONFIG_IEC60730B_TEST_ZEPHYR_API) /* Use Zephyr API fallback */
     int pin_value = gpio_pin_get_raw(port, pin);
 
     if (pin_value != (int)pin_expected_value) {
         return IEC60730B_TEST_DIO_ERROR;
     }
+#else
+    return IEC60730B_TEST_NOT_SUPPORTED;
 #endif
     return IEC60730B_TEST_OK;
 }
 
+/* Test digital output pin for IEC 60730 Class B compliance */
 int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin)
 {
     #define DIO_WAIT_CYCLE     75
@@ -114,7 +117,7 @@ int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin)
     if (FS_DIO_Output_LPC(&tested_pin, DIO_WAIT_CYCLE) != FS_PASS){
         return IEC60730B_TEST_DIO_ERROR;
     }
-#else /* Use Zephyr general API */
+#elif defined(CONFIG_IEC60730B_TEST_ZEPHYR_API) /* Use Zephyr API fallback*/
     int pin_value = gpio_pin_get_raw(port, pin); /* Save the pin value before test */
 
     if(pin_value < 0) {
@@ -145,6 +148,8 @@ int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin)
     if(gpio_pin_set_raw(port, pin, pin_value) < 0) {
         return IEC60730B_TEST_DIO_ERROR;
     }
+#else
+    return IEC60730B_TEST_NOT_SUPPORTED;
 #endif
     return IEC60730B_TEST_OK;
 }

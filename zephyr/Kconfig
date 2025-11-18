@@ -176,4 +176,13 @@ if IEC60730B
           software failures and generate system resets when required for
           safety-critical applications.
 
+    config IEC60730B_TEST_ZEPHYR_API
+        bool "Use Zephyr API fallback for safety tests"
+        help
+          When enabled, safety tests will use Zephyr's device driver APIs
+          as a fallback when the IEC60730B certified back-end library does
+          not support the hardware module being tested.
+          When disabled, unsupported hardware modules will return
+          IEC60730B_TEST_NOT_SUPPORTED (default behavior).
+
 endif # IEC60730B
