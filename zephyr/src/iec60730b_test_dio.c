@@ -81,14 +81,20 @@ int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin)
         return IEC60730B_TEST_DIO_ERROR;
     }
 #elif defined(CONFIG_GPIO_MCUX_IGPIO)
-    fs_dio_test_imx_t tested_pin;
+    /* Zephyr driver has a config limitation.
+       Disable it until the driver is fixed */
+    #if 0 
+        fs_dio_test_imx_t tested_pin;
 
-    tested_pin.gpio = (uint32_t)DEVICE_MMIO_NAMED_GET(port, igpio_mmio);
-    tested_pin.pinNum = pin;
+        tested_pin.gpio = (uint32_t)DEVICE_MMIO_NAMED_GET(port, igpio_mmio);
+        tested_pin.pinNum = pin;
 
-    if (FS_DIO_Output_IMXRT(&tested_pin, DIO_WAIT_CYCLE) != FS_PASS){
-        return IEC60730B_TEST_DIO_ERROR;
-    }
+        if (FS_DIO_Output_IMXRT(&tested_pin, DIO_WAIT_CYCLE) != FS_PASS){
+            return IEC60730B_TEST_DIO_ERROR;
+        }
+    #else
+        return IEC60730B_TEST_NOT_SUPPORTED;
+    #endif
 #elif defined(CONFIG_GPIO_MCUX_LPC)
     fs_dio_test_lpc_t tested_pin;
 
