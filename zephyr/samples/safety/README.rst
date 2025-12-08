@@ -1,8 +1,13 @@
-.. zephyr:code-sample:: safety_iec60730b
-   :name: Safety IEC 60730-B
-   :relevant-api: safety_iec60730b
+###################################
+Safety IEC60730B sample for Zephyr
+###################################
 
-   Demonstrates NXP Safety IEC 60730-B library functionality for safety-critical applications.
+Demonstrates NXP Safety IEC 60730-B library functionality for safety-critical applications.
+
+.. contents::
+   :local:
+   :depth: 2
+
 
 Overview
 ********
@@ -38,11 +43,10 @@ Building and Running
 
 Build and flash safety_iec60730b as follows, changing ``frdm_rw612`` for your board:
 
-.. zephyr-app-commands::
-   :zephyr-app: modules/safety/iec60730b/zephyr/samples/safety
-   :board: frdm_rw612
-   :goals: build flash
-   :compact:
+.. code-block:: console
+
+   west build -b frdm_rw612 modules/safety/iec60730b/zephyr/samples/safety
+   west flash
 
 After flashing, the application will:
 
@@ -58,35 +62,45 @@ The console output will show the safety test execution status:
 
 .. code-block:: console
 
-   *** Booting Zephyr OS build v4.2.0-1468-gbfdab166e3d4 ***
-   [00:00:00.018,355] <inf> safety: Task WDT channel 0 added with timeout 10000 ms
-   [00:00:00.026,125] <inf> safety: Executing CPU Registers tests
-   [00:00:00.032,575] <inf> safety: Safety test thread started automatically
-   [00:00:00.039,811] <inf> safety: Executing CPU Registers tests
+   Set up button at gpio@400ff080 pin 3
+   Set up led at gpio@400ff100 pin 31
+   *** Booting Zephyr OS build v4.3.0-683-g0c9d8b7a8e3b ***
+   <inf> safety: Task WDT channel 0 added with timeout 10000 ms
+   <inf> safety: Perform startup safety tests:
+   <inf> safety: == Executing Start-up tests ==
+   <inf> safety: CPU Registers test
+   <inf> safety: RAM test
+   <inf> safety: PC test
+   <inf> safety: Stack test initialization
+   <inf> safety: Flash test
+   <inf> safety: Safety test thread started
+   <inf> safety: == Executing Run-time tests ==
+   <inf> safety: CPU Registers test
+   <inf> safety: RAM test
+   <inf> safety: PC test
+   <inf> safety: Stack test
+   <inf> safety: Flash test
+   <inf> safety: DIO Input test
+   <inf> safety: DIO Output test
    LED state: OFF
-   [00:00:01.046,357] <inf> safety: Executing CPU Registers tests
+   <inf> safety: == Executing Run-time tests ==
+   <inf> safety: CPU Registers test
+   <inf> safety: RAM test
+   <inf> safety: PC test
+   <inf> safety: Stack test
+   <inf> safety: Flash test
+   <inf> safety: DIO Input test
+   <inf> safety: DIO Output test
    LED state: ON
-   [00:00:02.052,856] <inf> safety: Executing CPU Registers tests
+   <inf> safety: == Executing Run-time tests ==
+   <inf> safety: CPU Registers test
+   <inf> safety: RAM test
+   <inf> safety: PC test
+   <inf> safety: Stack test
+   <inf> safety: Flash test
+   <inf> safety: DIO Input test
+   <inf> safety: DIO Output test
    LED state: OFF
-   [00:00:03.059,356] <inf> safety: Executing CPU Registers tests
-   LED state: ON
-   [00:00:04.065,856] <inf> safety: Executing CPU Registers tests
-   LED state: OFF
-   [00:00:05.072,356] <inf> safety: Executing CPU Registers tests
-   LED state: ON
-   [00:00:06.078,856] <inf> safety: Executing CPU Registers tests
-   LED state: OFF
-   [00:00:07.085,356] <inf> safety: Executing CPU Registers tests
-   LED state: ON
-   [00:00:08.091,856] <inf> safety: Executing CPU Registers tests
-   LED state: OFF
-   [00:00:09.098,356] <inf> safety: Executing CPU Registers tests
-   LED state: ON
-   [00:00:10.104,856] <inf> safety: Executing CPU Registers tests
-   LED state: OFF
-   [00:00:11.111,356] <inf> safety: Executing CPU Registers tests
-   LED state: ON
-
 
 Safety Considerations
 *********************

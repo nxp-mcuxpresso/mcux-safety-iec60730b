@@ -231,6 +231,35 @@ int iec60730b_test_dio_input(const struct device *port, gpio_pin_t pin, bool pin
 int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin);
 #endif /* CONFIG_IEC60730B_TEST_DIO */
 
+#ifdef CONFIG_IEC60730B_TEST_CLOCK
+/*!
+ * @brief Initialize clock test for IEC 60730 Class B compliance
+ * 
+ * This function initializes the clock testing mechanism by configuring
+ * a counter device and timer parameters to monitor system clock integrity
+ * as required by IEC 60730 Class B. The test verifies that the system
+ * clock operates within acceptable tolerance limits.
+ * 
+ * @param counter Pointer to the counter device structure used for clock monitoring
+ * @param timer_period Timer period for clock test measurements
+ * @param tolerance_percent Acceptable clock deviation tolerance as a percentage
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_clock_init(const struct device *counter, k_timeout_t timer_period, uint32_t tolerance_percent);
+/*!
+ * @brief Perform clock test for IEC 60730 Class B compliance
+ * 
+ * This function executes the clock test to verify that the system clock
+ * operates within the tolerance limits configured during initialization.
+ * It should be called periodically after iec60730b_test_clock_init() to
+ * ensure continuous monitoring of clock integrity as required by IEC 60730 Class B.
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_clock(void);
+#endif /* CONFIG_IEC60730B_TEST_CLOCK */
+
 #ifdef __cplusplus
 }
 #endif

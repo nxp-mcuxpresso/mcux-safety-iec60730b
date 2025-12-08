@@ -100,7 +100,8 @@ if(CONFIG_IEC60730B)
         set_source_files_properties(${IEC60730B_SRC_DIR}/common_test/flash/iec60730b_invariable_memory.c PROPERTIES COMPILE_OPTIONS "-Wno-maybe-uninitialized")  # disable warning
     endif()
 
-    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CLOCK ${IEC60730B_SRC_DIR}/common_test/clock/iec60730b_clock.c)
+    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CLOCK ${IEC60730B_ZEPHYR_SRC_DIR}/iec60730b_test_clock.c
+                                                             ${IEC60730B_SRC_DIR}/common_test/clock/iec60730b_clock.c)
     zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_DIO ${IEC60730B_ZEPHYR_SRC_DIR}/iec60730b_test_dio.c
                                                            ${IEC60730B_SRC_DIR}/common_test/dio/iec60730b_dio.c
                                                            ${IEC60730B_SRC_DIR}/common_test/dio/iec60730b_dio_ext.c )

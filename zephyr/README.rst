@@ -4,7 +4,6 @@
 ###################################
 Safety IEC60730B library for Zephyr
 ###################################
-* Based on and tested with Zephyr v4.2.0
 
 .. contents::
    :local:
@@ -38,6 +37,8 @@ Follow these steps to set up a development environment on your machine.
                      url: <iec60730b_repository_url>
                      revision: <iec60730b_revision_or_branch>
                      path: modules/safety/iec60730b
+
+        * Now west recognizes ``safety_iec60730b`` as a module, and will include its Kconfig and CMakeLists.txt in the build system.
 
         * Then update module::
 
@@ -80,7 +81,7 @@ Folder structure
     iec60730b/
     ├─── ...
     └─── zephyr/                All Zephyr related files.
-        ├── samples/            Sample examples.
+        ├── samples/            Zephyr sample examples.
         ├── src/                Zephyr specific library source code.
         ├── module.yml          Defines module name, Cmake and Kconfig locations.
         ├── CMakeList.txt       Defines module's build process.
