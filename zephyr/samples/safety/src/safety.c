@@ -60,7 +60,7 @@ SYS_INIT(safety_init, APPLICATION /* POST_KERNEL */, CONFIG_KERNEL_INIT_PRIORITY
                                     safety_thread,
                                     NULL, NULL, NULL,
                                     CONFIG_APP_SAFETY_THREAD_PRIORITY, 0,
-                                    K_NO_WAIT);
+                                    K_MSEC(CONFIG_APP_SAFETY_PERIOD_MS));
 
         if (thread_id == NULL) {
             LOG_ERR("Failed to create safety thread");
@@ -73,7 +73,7 @@ SYS_INIT(safety_init, APPLICATION /* POST_KERNEL */, CONFIG_KERNEL_INIT_PRIORITY
     /* Safety test thread definition and automatic startup configuration. */
     K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE,
                     safety_thread, NULL, NULL, NULL,
-                    CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, 0);
+                    CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, CONFIG_APP_SAFETY_PERIOD_MS);
 #endif /* CONFIG_IEC60730B_TEST_STACK */
 
 int safety_error_code; /* Global error code. */
@@ -138,9 +138,8 @@ int safety_error_code; /* Global error code. */
 #endif /* CONFIG_IEC60730B_TEST_DIO */
 
 #if CONFIG_IEC60730B_TEST_CLOCK
-    /* Reference counter device for clock frequency testing */
-    #define COUNTER_DEV_NODE DT_ALIAS(test_counter)
-    static const struct device *test_reference_counter = DEVICE_DT_GET_OR_NULL(DT_ALIAS(reference_counter));
+    /* Counter device for clock frequency testing */
+    static const struct device *test_reference_counter = DEVICE_DT_GET_OR_NULL(DT_ALIAS(test_counter));
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
 
 /* Task watchdog */

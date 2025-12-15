@@ -5,4 +5,6 @@ tests:
     tags:
       - safety
     integration_platforms:
+      - frdm_mcxc444
       - frdm_rw612
+      - mimxrt1170_evk/mimxrt1176/cm7
