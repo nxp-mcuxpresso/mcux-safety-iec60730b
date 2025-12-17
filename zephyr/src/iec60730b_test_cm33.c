@@ -74,10 +74,22 @@ int iec60730b_test_cpu_reg(void)
     FS_CM33_CPU_SPprocess_Limit_NS();
 #endif
 
+#ifdef CONFIG_IEC60730B_TEST_CPU_REG_TZ
     if (FS_CM33_CPU_Control_S() == FS_FAIL_CPU_CONTROL){
         return IEC60730B_TEST_CPU_REG_CONTROL_ERROR;
     }
-    
+#else 
+    #ifdef CONFIG_IEC60730B_TEST_CPU_REG_FPU
+        if (FS_CM33_CPU_Control() == FS_FAIL_CPU_CONTROL){
+            return IEC60730B_TEST_CPU_REG_CONTROL_ERROR;
+        }
+    #else
+        if (FS_CM33_CPU_Control_NFPU() == FS_FAIL_CPU_CONTROL){
+            return IEC60730B_TEST_CPU_REG_CONTROL_ERROR;
+        }
+    #endif
+#endif
+
 #ifdef CONFIG_IEC60730B_TEST_CPU_REG_TZ
     /* CONTROL Non-Secure */
     if (FS_CM33_CPU_Control_NS() == FS_FAIL_CPU_CONTROL){
