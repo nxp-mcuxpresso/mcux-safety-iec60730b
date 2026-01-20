@@ -55,7 +55,7 @@ int iec60730b_test_dio_input(const struct device *port, gpio_pin_t pin, bool pin
 #ifdef CONFIG_GPIO_MCUX
     fs_dio_test_t tested_pin;
 
-    tested_pin.gpio = (uint32_t)((struct gpio_mcux_config *) port->config)->gpio_base;
+    tested_pin.gpio = (uint32_t)&((struct gpio_mcux_config *) port->config)->gpio_base->PDOR;
     tested_pin.pinNum = pin;
 
     if (FS_DIO_Input(&tested_pin, (bool_t)pin_expected_value) != FS_PASS) {
@@ -74,7 +74,7 @@ int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin)
 #ifdef CONFIG_GPIO_MCUX
     fs_dio_test_t tested_pin;
 
-    tested_pin.gpio = (uint32_t)((struct gpio_mcux_config *) port->config)->gpio_base;
+    tested_pin.gpio = (uint32_t)&((struct gpio_mcux_config *) port->config)->gpio_base->PDOR;
     tested_pin.pinNum = pin;
 
     if (FS_DIO_Output(&tested_pin, DIO_WAIT_CYCLE) != FS_PASS){

@@ -132,7 +132,7 @@ int iec60730b_test_clock(void)
 {
 #if defined(CONFIG_COUNTER_MCUX_LPTMR) || defined(CONFIG_COUNTER_MCUX_GPT) || defined(CONFIG_COUNTER_MCUX_CTIMER)
     if (clock_test_start == true) { /* condition is valid after the first timer interrupt */
-        printk("counter_ticks=0x%x [0x%x 0x%x]\n", counter_ticks, counter_ticks_limit_low, counter_ticks_limit_high);
+        //DM printk("counter_ticks=0x%x [0x%x 0x%x]\n", counter_ticks, counter_ticks_limit_low, counter_ticks_limit_high);
         if (FS_CLK_Check(counter_ticks, counter_ticks_limit_low, counter_ticks_limit_high) == FS_FAIL_CLK) {
             return IEC60730B_TEST_CLOCK_ERROR;
         }
