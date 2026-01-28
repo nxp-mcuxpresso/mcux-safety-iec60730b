@@ -8,6 +8,32 @@ menuconfig IEC60730B
 
 if IEC60730B
 
+    choice IEC60730B_HAL
+        prompt "IEC60730B Hardware Abstraction Layer (HAL) Selection"
+        default IEC60730B_HAL_NXP
+        help
+          Select the Hardware Abstraction Layer (HAL) implementation for
+          IEC60730B safety tests. Different HAL implementations provide
+          platform-specific test implementations for various hardware vendors.
+
+    config IEC60730B_HAL_NXP
+        bool "IEC60730B NXP HAL"
+        help
+          Use NXP-specific Hardware Abstraction Layer implementation for
+          IEC60730B safety tests. This provides optimized test implementations
+          for NXP microcontrollers including Cortex-M0+, Cortex-M4, Cortex-M7,
+          and Cortex-M33 based devices.
+
+    config IEC60730B_HAL_NONE
+        bool "No IEC60730B HAL"
+        help
+          Do not use any vendor-specific HAL implementation. Only weak
+          function implementations will be available, which return
+          IEC60730B_TEST_NOT_SUPPORTED. This option is useful when
+          implementing custom HAL.
+
+    endchoice
+
     config IEC60730B_TEST_CPU_REG
         bool "IEC60730B CPU registers test routines"
         default y

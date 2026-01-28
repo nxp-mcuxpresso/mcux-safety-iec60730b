@@ -3,6 +3,10 @@
 
 mainmenu "Safety iec60730b sample application"
 
+menu "Application Safety Configuration"
+
+menu "Safety test thread configuration"
+
 config APP_SAFETY_THREAD_STACK_SIZE
 	int "Safety test thread stack size"
 	default 1024
@@ -28,14 +32,31 @@ config APP_SAFETY_PERIOD_MS
 	  Shorter periods provide faster error detection but consume more CPU.
 	  Longer periods reduce CPU usage but may delay error detection.
 
-config APP_SAFETY_LOG_LEVEL
-	int "Safety tests log level"
-	default 3
-	range 0 4
-	depends on LOG
-	help
-	  Sets the log level for the safety tests module.
-	  Levels: 0=OFF, 1=ERROR, 2=WARNING, 3=INFO, 4=DEBUG
+menuconfig APP_SAFETY_TASK_WATCHDOG
+    bool "Safety Task Watchdog"
+    default y
+    depends on TASK_WDT
+    help
+      Enable task watchdog for safety monitoring. The task watchdog
+      monitors the safety test thread and triggers a callback if
+      the thread fails to feed the watchdog within the specified timeout.
+      This provides an additional safety mechanism to detect thread
+      failures or system hangs.
+
+if APP_SAFETY_TASK_WATCHDOG
+
+config APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS
+    int "Task watchdog timeout in milliseconds"
+    default 10000
+    help
+      Timeout value for the safety task watchdog in milliseconds.
+      This should be larger than CONFIG_APP_SAFETY_TESTS_PERIOD_MS
+      to allow for test execution time. If the safety thread doesn't
+      feed the watchdog within this time, the callback will be triggered.
+
+endif # APP_SAFETY_TASK_WATCHDOG
+
+endmenu # Safety test thread configuration
 
 choice APP_SAFETY_ERROR_ACTION
 	prompt "Safety Error Action"
@@ -59,31 +80,9 @@ config APP_SAFETY_ERROR_ACTION_RESET
 
 endchoice
 
-config APP_SAFETY_TASK_WATCHDOG
-    bool "Enable Safety Task Watchdog"
-    default y
-    depends on TASK_WDT
-    help
-      Enable task watchdog for safety monitoring. The task watchdog
-      monitors the safety test thread and triggers a callback if
-      the thread fails to feed the watchdog within the specified timeout.
-      This provides an additional safety mechanism to detect thread
-      failures or system hangs.
-
-if APP_SAFETY_TASK_WATCHDOG
-
-config APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS
-    int "Task watchdog timeout in milliseconds"
-    default 10000
-    help
-      Timeout value for the safety task watchdog in milliseconds.
-      This should be larger than CONFIG_APP_SAFETY_TESTS_PERIOD_MS
-      to allow for test execution time. If the safety thread doesn't
-      feed the watchdog within this time, the callback will be triggered.
-
-endif # APP_SAFETY_TASK_WATCHDOG
-
 if IEC60730B_TEST_RAM
+
+menu "RAM Test Configuration"
 
 config APP_SAFETY_TEST_RAM_BUFFER_SIZE
 	int "Safety RAM test buffer size in bytes"
@@ -99,9 +98,13 @@ config APP_SAFETY_TEST_RAM_BACKUP_BUFFER_SIZE
 	  Size of the backup buffer used during RAM safety testing.
 	  This buffer stores the original data while the main buffer is being tested.
 
-endif #IEC60730B_TEST_RAM
+endmenu # RAM Test Configuration
+
+endif # IEC60730B_TEST_RAM
 
 if IEC60730B_TEST_STACK
+
+menu "Stack Test Configuration"
 
 config APP_SAFETY_TEST_STACK_GUARD_SIZE
 	int "Stack test guard size for overflow detection"
@@ -120,6 +123,23 @@ config APP_SAFETY_TEST_STACK_GUARD_PATTERN
 	  The pattern should be chosen to be easily detectable when corrupted
 	  and unlikely to occur naturally in normal program execution.
 
-endif #IEC60730B_TEST_STACK
+endmenu # Stack Test Configuration
+
+endif # IEC60730B_TEST_STACK
+
+config APP_SAFETY_LOG_LEVEL
+	int "Safety tests log level"
+	default 3
+	range 0 4
+	depends on LOG
+	help
+	  Sets the log level for the safety tests module.
+	  Levels: 0=OFF, 1=ERROR, 2=WARNING, 3=INFO, 4=DEBUG
+
+endmenu # Application Safety Configuration
+
+menu "Zephyr Kernel Configuration"
 
 source "Kconfig.zephyr"
+
+endmenu # Zephyr Kernel Configuration

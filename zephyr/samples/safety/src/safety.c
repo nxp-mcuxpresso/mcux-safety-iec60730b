@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 NXP
+ * Copyright 2025-2026 NXP
  * SPDX-License-Identifier: Apache-2.0
  * 
  * This demo application invokes safety tests according to IEC 60730 Class B.
@@ -23,7 +23,7 @@
 ******************************************************************************/
 static int safety_init(void);
 static void safety_thread(void *arg1, void *arg2, void *arg3);
-static void safety_error_handling(int error_code);
+static void safety_error_handler(int error_code);
 static void safety_startup_tests(void);
 static void safety_rutime_tests(void);
 
@@ -64,7 +64,7 @@ SYS_INIT(safety_init, APPLICATION /* POST_KERNEL */, CONFIG_KERNEL_INIT_PRIORITY
 
         if (thread_id == NULL) {
             LOG_ERR("Failed to create safety thread");
-            safety_error_handling(IEC60730B_TEST_ERROR);
+            safety_error_handler(IEC60730B_TEST_ERROR);
         }
 
         k_thread_name_set(thread_id, "safety");
@@ -195,14 +195,14 @@ static int safety_task_wdt_init(void)
 
     if (result != 0) {
         LOG_ERR("task wdt init failure: %d\n", result);
-        safety_error_handling(IEC60730B_TEST_ERROR);
+        safety_error_handler(IEC60730B_TEST_ERROR);
     }
 
     /* Add a new task watchdog channel with the safety callback function */
     safety_task_wdt_id = task_wdt_add(CONFIG_APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS, safety_task_wdt_callback, NULL);
     if (safety_task_wdt_id < 0) {
         LOG_ERR("Failed to add task WDT channel");
-        safety_error_handling(IEC60730B_TEST_ERROR);
+        safety_error_handler(IEC60730B_TEST_ERROR);
     }
     LOG_INF("Task WDT channel %d added with timeout %d ms", safety_task_wdt_id, CONFIG_APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS);
 
@@ -217,7 +217,7 @@ static void safety_task_wdt_callback(int channel_id, void *user_data)
     ARG_UNUSED(user_data);
     LOG_WRN("Task watchdog channel %d timeout", channel_id);
 
-    safety_error_handling(IEC60730B_TEST_WDT_ERROR);
+    safety_error_handler(IEC60730B_TEST_WDT_ERROR);
 }
 #endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
 
@@ -245,7 +245,7 @@ static void safety_thread(void *arg1, void *arg2, void *arg3)
 /*
  * Safety error handling
  */
-static void safety_error_handling(int error_code)
+static void safety_error_handler(int error_code)
 {
     safety_error_code = error_code;
     LOG_ERR("Safety error detected: %d", safety_error_code);
@@ -264,6 +264,23 @@ static void safety_error_handling(int error_code)
 #endif
 }
 
+/*
+ * Handles the result of a safety test execution.
+ */
+static void safety_test_result_handler(int result, const char *test_name)
+{
+    /*
+     * If failed, invoke the error handler. Otherwise, log the test result
+     * as either PASS or SKIP.
+     */
+    if (result < 0) { 
+        safety_error_handler(result);
+    } else {
+        LOG_INF("%s:\t %s", result == IEC60730B_TEST_OK ? "PASS" : "SKIP", test_name);
+    }
+}
+
+
 /*******************************************************************************
  * ADD YOUR SAFETY TESTS HERE
  ******************************************************************************/
@@ -281,59 +298,41 @@ static void safety_startup_tests(void)
     LOG_INF("== Executing Start-up tests ==");
 
 #ifdef CONFIG_IEC60730B_TEST_CPU_REG
-    LOG_INF("CPU Registers test");
     result = iec60730b_test_cpu_reg();
-    if(result < 0){
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "CPU Registers test");
 #endif /* CONFIG_IEC60730B_TEST_CPU_REG */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
-    LOG_INF("RAM test");
     result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
                                 safety_test_ram_backup_buffer, sizeof(safety_test_ram_backup_buffer),
                                 IEC60730B_TEST_RAM_TYPE_MARCH_C);
-    if (result < 0) {
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "RAM test");
 #endif /* CONFIG_IEC60730B_TEST_RAM */
 
 #ifdef CONFIG_IEC60730B_TEST_PC
-    LOG_INF("PC test");
     result = iec60730b_test_pc();
-    if (result < 0) {
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "PC test");
 #endif /* CONFIG_IEC60730B_TEST_PC */
 
+#ifdef CONFIG_IEC60730B_TEST_FLASH
+    result = iec60730b_test_flash_crc(safety_test_flash_buffer,
+                                      sizeof(safety_test_flash_buffer),
+                                      SAFETY_TEST_FLASH_BUFFER_CRC);
+    safety_test_result_handler(result, "Flash test");
+#endif /* CONFIG_IEC60730B_TEST_FLASH */
+
 #ifdef CONFIG_IEC60730B_TEST_STACK
-    LOG_INF("Stack test initialization");
     result = iec60730b_test_stack_init(SAFETY_THREAD_STACK,
                                        SAFETY_THREAD_STACK_SIZE,
                                        CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE,
                                        CONFIG_APP_SAFETY_TEST_STACK_GUARD_PATTERN);
-    if (result < 0) {
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "Stack test initialization");
 #endif /* CONFIG_IEC60730B_TEST_STACK */
-
-#ifdef CONFIG_IEC60730B_TEST_FLASH
-    LOG_INF("Flash test");
-    result = iec60730b_test_flash_crc(safety_test_flash_buffer,
-                                      sizeof(safety_test_flash_buffer),
-                                      SAFETY_TEST_FLASH_BUFFER_CRC);
-    if (result < 0) {
-        safety_error_handling(result);
-    }
-#endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_CLOCK
     if(test_reference_counter != NULL) {
-        LOG_INF("Clock test initialization");
         result = iec60730b_test_clock_init(test_reference_counter, K_MSEC(1000), 20);
-        if (result < 0) {
-            safety_error_handling(result);
-        }
+        safety_test_result_handler(result, "Clock test initialization");
     }
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
 }
@@ -352,74 +351,50 @@ static void safety_rutime_tests(void)
     LOG_INF("== Executing Run-time tests ==");
 
 #ifdef CONFIG_IEC60730B_TEST_CPU_REG
-    LOG_INF("CPU Registers test");
     result = iec60730b_test_cpu_reg();
-    if(result < 0){
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "CPU Registers test");
 #endif /* CONFIG_IEC60730B_TEST_CPU_REG */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
-    LOG_INF("RAM test");
     result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
                                 safety_test_ram_backup_buffer, sizeof(safety_test_ram_backup_buffer),
                                 IEC60730B_TEST_RAM_TYPE_MARCH_X);
-    if (result < 0) {
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "RAM test");
 #endif /* CONFIG_IEC60730B_TEST_RAM */
 
 #ifdef CONFIG_IEC60730B_TEST_PC
-    LOG_INF("PC test");
     result = iec60730b_test_pc();
-    if (result < 0) {
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "PC test");
 #endif /* CONFIG_IEC60730B_TEST_PC */
 
 #ifdef CONFIG_IEC60730B_TEST_STACK
-    LOG_INF("Stack test");
     result = iec60730b_test_stack(SAFETY_THREAD_STACK,
                                   SAFETY_THREAD_STACK_SIZE,
                                   CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE,
                                   CONFIG_APP_SAFETY_TEST_STACK_GUARD_PATTERN);
-    if (result < 0) {
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "Stack test");
 #endif /* CONFIG_IEC60730B_TEST_STACK */
 
 #ifdef CONFIG_IEC60730B_TEST_FLASH
-    LOG_INF("Flash test");
     result = iec60730b_test_flash_crc(safety_test_flash_buffer,
                                       sizeof(safety_test_flash_buffer),
                                       SAFETY_TEST_FLASH_BUFFER_CRC);
-    if (result < 0) {
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "Flash test");
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_DIO
     /* NOTE: Test is failed if the sw0 button pressed & hold*/
-    LOG_INF("DIO Input test");
     result = iec60730b_test_dio_input(test_gpio_input.port, test_gpio_input.pin, 1);
-    if (result < 0) {
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "DIO Input test");
 
-    LOG_INF("DIO Output test");
     result = iec60730b_test_dio_output(test_gpio_output.port, test_gpio_output.pin);
-    if (result < 0) {
-        safety_error_handling(result);
-    }
+    safety_test_result_handler(result, "DIO Output test");
 #endif /* CONFIG_IEC60730B_TEST_DIO */
 
 #ifdef CONFIG_IEC60730B_TEST_CLOCK
     if(test_reference_counter != NULL) {
-        LOG_INF("Clock test");
         result = iec60730b_test_clock();
-        if (result < 0) {
-            safety_error_handling(result);
-        }
+        safety_test_result_handler(result, "Clock test");
     }
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
