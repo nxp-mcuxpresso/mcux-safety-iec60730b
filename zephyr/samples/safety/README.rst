@@ -62,40 +62,49 @@ The console output will show the safety test execution status:
 
 .. code-block:: console
 
-   Set up button at gpio@400ff080 pin 3
-   Set up led at gpio@400ff100 pin 31
-   *** Booting Zephyr OS build v4.3.0-3938-ga600317285ff ***
-   safety: Task WDT channel 0 added with timeout 10000 ms
+   main: Set up button at gpio@0 pin 11
+   main: Set up led at gpio@0 pin 12
+   *** Booting Zephyr OS build v4.3.0-5931-g8100484e5d43 ***
    safety: Perform startup safety tests:
    safety: == Executing Start-up tests ==
-   safety: PASS:    CPU Registers test
-   safety: PASS:    RAM test
-   safety: PASS:    PC test
-   safety: PASS:    Flash test
-   safety: PASS:    Stack test initialization
-   safety: PASS:    Clock test initialization
-   LED state: OFF
+   safety: PASS: CPU Registers test
+   safety: PASS: FPU Registers test
+   safety: PASS: RAM test
+   safety: PASS: PC test
+   safety: PASS: Flash test
+   safety: PASS: Stack test initialization
+   main: LED state: OFF
    safety: Safety test thread started
    safety: == Executing Run-time tests ==
-   safety: PASS:    CPU Registers test
-   safety: PASS:    RAM test
-   safety: PASS:    PC test
-   safety: PASS:    Stack test
-   safety: PASS:    Flash test
-   safety: PASS:    DIO Input test
-   safety: PASS:    DIO Output test
-   safety: PASS:    Clock test
-   LED state: ON
+   safety: PASS: CPU Registers test
+   safety: PASS: FPU Registers test
+   safety: PASS: RAM test
+   safety: PASS: PC test
+   safety: PASS: Stack test
+   safety: PASS: Flash test
+   safety: SKIP: DIO Input test
+   safety: PASS: DIO Output test
+   main: LED state: ON
    safety: == Executing Run-time tests ==
-   safety: PASS:    CPU Registers test
-   safety: PASS:    RAM test
-   safety: PASS:    PC test
-   safety: PASS:    Stack test
-   safety: PASS:    Flash test
-   safety: PASS:    DIO Input test
-   safety: PASS:    DIO Output test
-   safety: PASS:    Clock test
-   LED state: OFF
+   safety: PASS: CPU Registers test
+   safety: PASS: FPU Registers test
+   safety: PASS: RAM test
+   safety: PASS: PC test
+   safety: PASS: Stack test
+   safety: PASS: Flash test
+   safety: SKIP: DIO Input test
+   safety: PASS: DIO Output test
+   main: LED state: OFF
+   safety: == Executing Run-time tests ==
+   safety: PASS: CPU Registers test
+   safety: PASS: FPU Registers test
+   safety: PASS: RAM test
+   safety: PASS: PC test
+   safety: PASS: Stack test
+   safety: PASS: Flash test
+   safety: SKIP: DIO Input test
+   safety: PASS: DIO Output test
+   main: LED state: ON
 
 Safety Considerations
 *********************

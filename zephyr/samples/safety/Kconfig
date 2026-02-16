@@ -136,6 +136,21 @@ config APP_SAFETY_LOG_LEVEL
 	  Sets the log level for the safety tests module.
 	  Levels: 0=OFF, 1=ERROR, 2=WARNING, 3=INFO, 4=DEBUG
 
+config APP_MAIN_LOG_LEVEL
+	int "Main application log level"
+	default 3
+	range 0 4
+	depends on LOG
+	help
+	  Sets the log level for the safety tests module.
+	  Levels: 0=OFF, 1=ERROR, 2=WARNING, 3=INFO, 4=DEBUG
+
+config APP_MAIN_SLEEP_TIME_MS
+	int "Main thread sleep time in milliseconds"
+	default 1000
+	help
+	  Time in milliseconds that the main thread sleeps between iterations.
+
 endmenu # Application Safety Configuration
 
 menu "Zephyr Kernel Configuration"

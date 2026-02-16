@@ -275,11 +275,13 @@ static void safety_test_result_handler(int result, const char *test_name)
      */
     if (result < 0) { 
         safety_error_handler(result);
-    } else {
-        LOG_INF("%s:\t %s", result == IEC60730B_TEST_OK ? "PASS" : "SKIP", test_name);
+    } else if(result == IEC60730B_TEST_OK) {
+        LOG_INF("PASS: %s", test_name);
+    }
+    else {
+        LOG_WRN("SKIP: %s", test_name);
     }
 }
-
 
 /*******************************************************************************
  * ADD YOUR SAFETY TESTS HERE
@@ -297,10 +299,15 @@ static void safety_startup_tests(void)
 
     LOG_INF("== Executing Start-up tests ==");
 
-#ifdef CONFIG_IEC60730B_TEST_CPU_REG
-    result = iec60730b_test_cpu_reg();
+#ifdef CONFIG_IEC60730B_TEST_CPU
+    result = iec60730b_test_cpu();
     safety_test_result_handler(result, "CPU Registers test");
-#endif /* CONFIG_IEC60730B_TEST_CPU_REG */
+#endif /* CONFIG_IEC60730B_TEST_CPU */
+
+#ifdef CONFIG_IEC60730B_TEST_FPU
+    result = iec60730b_test_fpu();
+    safety_test_result_handler(result, "FPU Registers test");
+#endif /* CONFIG_IEC60730B_TEST_FPU */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
     result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
@@ -350,10 +357,15 @@ static void safety_rutime_tests(void)
 
     LOG_INF("== Executing Run-time tests ==");
 
-#ifdef CONFIG_IEC60730B_TEST_CPU_REG
-    result = iec60730b_test_cpu_reg();
+#ifdef CONFIG_IEC60730B_TEST_CPU
+    result = iec60730b_test_cpu();
     safety_test_result_handler(result, "CPU Registers test");
-#endif /* CONFIG_IEC60730B_TEST_CPU_REG */
+#endif /* CONFIG_IEC60730B_TEST_CPU */
+
+#ifdef CONFIG_IEC60730B_TEST_FPU
+    result = iec60730b_test_fpu();
+    safety_test_result_handler(result, "FPU Registers test");
+#endif /* CONFIG_IEC60730B_TEST_FPU */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
     result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),

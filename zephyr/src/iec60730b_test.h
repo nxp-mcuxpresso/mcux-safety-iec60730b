@@ -12,6 +12,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+
 /*!
  * @name Safety test error codes
  * @brief Error code definitions for IEC 60730 Class B safety test failures
@@ -19,23 +20,20 @@
 #define IEC60730B_TEST_OK                       (0)      /* No error */
 #define IEC60730B_TEST_NOT_SUPPORTED            (1)      /* Not supported */
 #define IEC60730B_TEST_ERROR                    (-1)     /* General error */
-#define IEC60730B_TEST_CPU_REG_ERROR            (-2)     /* CPU registers test fault */
-#define IEC60730B_TEST_CPU_REG_PRIMASK_ERROR    (-3)     /* PRIMASK test fault */
-#define IEC60730B_TEST_CPU_REG_NONSTACKED_ERROR (-4)     /* Non-stacked CPU test fault */
-#define IEC60730B_TEST_CPU_REG_FLOAT_ERROR      (-5)     /* Floating point registers test fault */
-#define IEC60730B_TEST_CPU_REG_CONTROL_ERROR    (-6)     /* CONTROL register test fault */
-#define IEC60730B_TEST_CPU_REG_SPECIAL_ERROR    (-7)     /* Special CPU registers test fault */
-#define IEC60730B_TEST_WDT_ERROR                (-8)     /* Watchdog error */
-#define IEC60730B_TEST_FLASH_ERROR              (-9)     /* Flash test fault */
-#define IEC60730B_TEST_RAM_ERROR                (-10)    /* RAM test fault */
-#define IEC60730B_TEST_STACK_ERROR              (-11)    /* Stack test fault */
-#define IEC60730B_TEST_CLOCK_ERROR              (-12)    /* Clock test fault */
-#define IEC60730B_TEST_PC_ERROR                 (-13)    /* Program counter test fault */
-#define IEC60730B_TEST_DIO_ERROR                (-14)    /* Digital Input/Output test fault */
+#define IEC60730B_TEST_CPU_ERROR                (-2)     /* CPU registers test fault */
+#define IEC60730B_TEST_FPU_ERROR                (-3)     /* Floating point registers test fault */
+#define IEC60730B_TEST_WDT_ERROR                (-4)     /* Watchdog error */
+#define IEC60730B_TEST_FLASH_ERROR              (-5)     /* Flash test fault */
+#define IEC60730B_TEST_RAM_ERROR                (-6)     /* RAM test fault */
+#define IEC60730B_TEST_STACK_ERROR              (-7)     /* Stack test fault */
+#define IEC60730B_TEST_CLOCK_ERROR              (-8)     /* Clock test fault */
+#define IEC60730B_TEST_PC_ERROR                 (-9)     /* Program counter test fault */
+#define IEC60730B_TEST_DIO_ERROR                (-10)    /* Digital Input/Output test fault */
 
-#ifdef CONFIG_IEC60730B_TEST_RAM
 /*!
  * @brief RAM test algorithm types for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_RAM}
  * 
  * This enumeration defines the available RAM test algorithms that can be
  * used to detect memory faults as required by IEC 60730 Class B safety
@@ -75,23 +73,20 @@ typedef enum {
      */
     IEC60730B_TEST_RAM_TYPE_MARCH_X
 } iec60730b_test_ram_type_t;
-#endif
 
-#ifdef CONFIG_IEC60730B_TEST_FLASH
 /*!
  * @brief Flash CRC data type for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_FLASH}
  * 
  * This type definition provides the appropriate CRC data type for flash
  * memory integrity testing. 
  */
 #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
 typedef uint32_t iec60730b_flash_crc_t;
-#elif CONFIG_IEC60730B_TEST_FLASH_CRC16
+#else /* CONFIG_IEC60730B_TEST_FLASH_CRC16 */
 typedef uint16_t iec60730b_flash_crc_t;
-#else
-#error "Invalid Flash CRC configuration."
 #endif
-#endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,9 +95,10 @@ extern "C" {
 /*******************************************************************************
  * API
  ******************************************************************************/
-#ifdef CONFIG_IEC60730B_TEST_CPU_REG
 /*!
  * @brief Test CPU registers for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_CPU}
  * 
  * This function performs a comprehensive test of CPU registers to detect
  * stuck-at faults and ensure proper register functionality as required
@@ -110,12 +106,25 @@ extern "C" {
  * 
  * @return 0 on success, negative on failure
  */
-int iec60730b_test_cpu_reg(void);
-#endif /* CONFIG_IEC60730B_TEST_CPU_REG */
+int iec60730b_test_cpu(void);
 
-#ifdef CONFIG_IEC60730B_TEST_RAM
+/**
+ * @brief Test FPU (Floating Point Unit) registers
+ * 
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_FPU}
+ *
+ * This function performs IEC 60730 Class B safety test on the FPU registers
+ * to detect stuck-at faults and ensure proper operation of floating point
+ * hardware.
+ *
+ * @return 0 if test passes, non-zero error code if test fails
+ */
+int iec60730b_test_fpu(void);
+
 /*!
  * @brief Test RAM memory for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_RAM}
  * 
  * This function performs comprehensive RAM testing using the specified algorithm
  * to detect memory faults such as stuck-at bits, coupling faults, and addressing
@@ -130,11 +139,11 @@ int iec60730b_test_cpu_reg(void);
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t backup_size, iec60730b_test_ram_type_t type);
-#endif /* CONFIG_IEC60730B_TEST_RAM */
 
-#ifdef CONFIG_IEC60730B_TEST_PC
 /*!
  * @brief Test Program Counter for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_PC}
  * 
  * This function performs Program Counter testing to detect execution flow
  * corruption and ensure proper program execution as required by IEC 60730
@@ -144,11 +153,11 @@ int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t ba
  * @return 0 on success, negative error code on failure
  */
 int iec60730b_test_pc(void);
-#endif /* CONFIG_IEC60730B_TEST_PC */
 
-#ifdef CONFIG_IEC60730B_TEST_STACK
 /*!
  * @brief Initialize stack testing for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_STACK}
  * 
  * This function initializes the stack testing mechanism by setting up
  * guard patterns and boundaries to detect stack overflow and underflow
@@ -166,6 +175,8 @@ int iec60730b_test_stack_init(void *stack_start, size_t stack_size, size_t guard
 
 /*!
  * @brief Test stack integrity for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_STACK}
  * 
  * This function performs stack integrity testing by checking guard patterns
  * and boundaries to detect stack overflow and underflow conditions as
@@ -180,11 +191,11 @@ int iec60730b_test_stack_init(void *stack_start, size_t stack_size, size_t guard
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size, uint32_t guard_pattern);
-#endif /* CONFIG_IEC60730B_TEST_STACK */
 
-#ifdef CONFIG_IEC60730B_TEST_FLASH
 /*!
  * @brief Test flash memory using CRC for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_FLASH}
  * 
  * This function performs flash memory integrity testing using CRC checksum
  * calculation to detect memory corruption and ensure data integrity as
@@ -198,11 +209,11 @@ int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_flash_crc(const void *start, size_t size, iec60730b_flash_crc_t crc_expected);
-#endif /* CONFIG_IEC60730B_TEST_FLASH */
 
-#ifdef CONFIG_IEC60730B_TEST_DIO
 /*!
  * @brief Test digital input pin for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_DIO}
  * 
  * This function performs digital input testing by reading the state
  * of a specified GPIO pin and comparing it against the expected value to
@@ -218,6 +229,8 @@ int iec60730b_test_dio_input(const struct device *port, gpio_pin_t pin, bool pin
 
 /*!
  * @brief Test digital output pin for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_DIO}
  * 
  * This function performs digital output testing by controlling the state
  * of a specified GPIO pin to detect hardware faults as required by 
@@ -229,11 +242,11 @@ int iec60730b_test_dio_input(const struct device *port, gpio_pin_t pin, bool pin
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin);
-#endif /* CONFIG_IEC60730B_TEST_DIO */
 
-#ifdef CONFIG_IEC60730B_TEST_CLOCK
 /*!
  * @brief Initialize clock test for IEC 60730 Class B compliance
+ * 
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_CLOCK}
  * 
  * This function initializes the clock testing mechanism by configuring
  * a counter device and timer parameters to monitor system clock integrity
@@ -247,8 +260,11 @@ int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin);
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_clock_init(const struct device *counter, k_timeout_t timer_period, uint32_t tolerance_percent);
+
 /*!
  * @brief Perform clock test for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_CLOCK}
  * 
  * This function executes the clock test to verify that the system clock
  * operates within the tolerance limits configured during initialization.
@@ -258,7 +274,6 @@ int iec60730b_test_clock_init(const struct device *counter, k_timeout_t timer_pe
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_clock(void);
-#endif /* CONFIG_IEC60730B_TEST_CLOCK */
 
 #ifdef __cplusplus
 }

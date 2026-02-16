@@ -5,12 +5,19 @@
 
 #include "iec60730b_test.h"
 
-#ifdef CONFIG_IEC60730B_TEST_CPU_REG
-__weak int iec60730b_test_cpu_reg(void)
+#ifdef CONFIG_IEC60730B_TEST_CPU
+__weak int iec60730b_test_cpu(void)
 {
     return IEC60730B_TEST_NOT_SUPPORTED;
 }
-#endif /* CONFIG_IEC60730B_TEST_CPU_REG */
+#endif /* CONFIG_IEC60730B_TEST_CPU */
+
+#ifdef CONFIG_IEC60730B_TEST_FPU
+__weak int iec60730b_test_fpu(void)
+{
+    return IEC60730B_TEST_NOT_SUPPORTED;
+}
+#endif /* CONFIG_IEC60730B_TEST_FPU */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
 __weak int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t backup_size, iec60730b_test_ram_type_t type)

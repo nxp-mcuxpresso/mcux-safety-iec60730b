@@ -34,7 +34,7 @@ if IEC60730B
 
     endchoice
 
-    config IEC60730B_TEST_CPU_REG
+    config IEC60730B_TEST_CPU
         bool "IEC60730B CPU registers test routines"
         default y
         help
@@ -43,10 +43,10 @@ if IEC60730B
           writing test patterns and reading them back to detect
           stuck-at faults and other register-related failures.
 
-    config IEC60730B_TEST_CPU_REG_FPU
+    config IEC60730B_TEST_FPU
         bool "IEC60730B FPU registers test routines"
         default y
-        depends on IEC60730B_TEST_CPU_REG && CPU_HAS_FPU
+        depends on CPU_HAS_FPU
         select FPU
         help
           Enable Floating Point Unit (FPU) register test routines for
@@ -54,30 +54,6 @@ if IEC60730B
           FPU registers by writing test patterns and reading them back
           to detect stuck-at faults in floating point registers.
           Requires FPU hardware support.
-
-    config IEC60730B_TEST_CPU_REG_DSP
-        bool "IEC60730B DSP registers test routines"
-        default y
-        depends on IEC60730B_TEST_CPU_REG && ARMV8_M_DSP
-        help
-          Enable Digital Signal Processing (DSP) register test routines
-          for the IEC60730B safety library. This test verifies the
-          integrity of DSP extension registers by writing test patterns
-          and reading them back to detect stuck-at faults in DSP
-          registers. Only available on ARMv8-M processors with DSP
-          extension support.
-
-    config IEC60730B_TEST_CPU_REG_TZ
-        bool "IEC60730B Trust Zone registers test routines"
-        default y
-        depends on IEC60730B_TEST_CPU_REG && ARM_TRUSTZONE_M
-        help
-          Enable TrustZone register test routines for the IEC60730B safety library.
-          This test verifies the integrity of TrustZone
-          security extension registers by writing test patterns and
-          reading them back to detect stuck-at faults in security-
-          related registers. Only available on ARM processors with
-          TrustZone-M support.
 
     config IEC60730B_TEST_PC
         bool "IEC60730B Program Counter test routines"

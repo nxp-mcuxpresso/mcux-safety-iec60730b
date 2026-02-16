@@ -15,13 +15,12 @@ if(CONFIG_IEC60730B_HAL_NXP)
             ${IEC60730B_SRC_DIR}/core_test/cm0/register
             ${IEC60730B_SRC_DIR}/core_test/cm0/stack
         )
-        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG ${IEC60730B_SRC_DIR}/core_test/cm0/register/iec60730b_cm0_reg.S)
+        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU ${IEC60730B_SRC_DIR}/core_test/cm0/register/iec60730b_cm0_reg.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_RAM ${IEC60730B_SRC_DIR}/core_test/cm0/ram/iec60730b_cm0_ram.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_PC ${IEC60730B_SRC_DIR}/core_test/cm0/programCounter/iec60730b_cm0_pc.S
                                                             ${IEC60730B_SRC_DIR}/core_test/cm0/programCounter/iec60730b_cm0_pc_object.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_FLASH ${IEC60730B_SRC_DIR}/core_test/cm0/flash/iec60730b_cm0_flash.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_STACK ${IEC60730B_SRC_DIR}/core_test/cm0/stack/iec60730b_cm0_stack.S)
-        zephyr_library_sources(${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_cm0.c)
     # Tests for Cortex-M4/M7 CPU
     elseif(CONFIG_CPU_CORTEX_M4 OR CONFIG_CPU_CORTEX_M7)
         zephyr_include_directories(
@@ -32,14 +31,13 @@ if(CONFIG_IEC60730B_HAL_NXP)
             ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/register
             ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/stack
         )
-        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/register/iec60730b_cm4_cm7_reg.S)
-        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG_FPU ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/register/iec60730b_cm4_cm7_reg_fpu.S)
+        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/register/iec60730b_cm4_cm7_reg.S)
+        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_FPU ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/register/iec60730b_cm4_cm7_reg_fpu.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_RAM ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/ram/iec60730b_cm4_cm7_ram.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_PC ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/programCounter/iec60730b_cm4_cm7_pc.S
                                                             ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/programCounter/iec60730b_cm4_cm7_pc_object.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_FLASH ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/flash/iec60730b_cm4_cm7_flash.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_STACK ${IEC60730B_SRC_DIR}/core_test/cm4_cm7/stack/iec60730b_cm4_cm7_stack.S)
-        zephyr_library_sources(${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_cm4_cm7.c)
     # Tests for Cortex-M33 CPU
     elseif(CONFIG_CPU_CORTEX_M33)
         zephyr_include_directories(
@@ -50,15 +48,14 @@ if(CONFIG_IEC60730B_HAL_NXP)
             ${IEC60730B_SRC_DIR}/core_test/cm33/register
             ${IEC60730B_SRC_DIR}/core_test/cm33/stack
         )
-        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG ${IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg.S)
-        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG_FPU ${IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg_fpu.S)
-        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU_REG_DSP ${IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg_dsp_ext.S)
+        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU ${IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg.S)
+        zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_FPU ${IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg_fpu.S)
+        zephyr_library_sources_ifdef(CONFIG_ARMV8_M_DSP ${IEC60730B_SRC_DIR}/core_test/cm33/register/iec60730b_cm33_reg_dsp_ext.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_RAM ${IEC60730B_SRC_DIR}/core_test/cm33/ram/iec60730b_cm33_ram.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_PC ${IEC60730B_SRC_DIR}/core_test/cm33/programCounter/iec60730b_cm33_pc.S
                                                             ${IEC60730B_SRC_DIR}/core_test/cm33/programCounter/iec60730b_cm33_pc_object.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_FLASH ${IEC60730B_SRC_DIR}/core_test/cm33/flash/iec60730b_cm33_flash.S)
         zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_STACK ${IEC60730B_SRC_DIR}/core_test/cm33/stack/iec60730b_cm33_stack.S)
-        zephyr_library_sources(${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_cm33.c)
     else()
         message(FATAL_ERROR "Platform is not supported!")
     endif()
@@ -76,14 +73,21 @@ if(CONFIG_IEC60730B_HAL_NXP)
         ${IEC60730B_ZEPHYR_SRC_DIR}
         ${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}
     )
+
+    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CPU ${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_cpu.c)
+    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_FPU ${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_fpu.c)
     if(CONFIG_IEC60730B_TEST_AIO)
         zephyr_library_sources(${IEC60730B_SRC_DIR}/common_test/aio/iec60730b_aio.c)
         zephyr_library_compile_options(-Wno-parentheses) # disable warning
     endif()
     if(CONFIG_IEC60730B_TEST_FLASH)
+        zephyr_library_sources(${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_flash.c)
         zephyr_library_sources(${IEC60730B_SRC_DIR}/common_test/flash/iec60730b_invariable_memory.c)
         zephyr_library_compile_options(-Wno-maybe-uninitialized) # disable warning
     endif()
+    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_STACK ${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_stack.c)
+    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_PC ${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_pc.c)
+    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_RAM ${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_ram.c)
     zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_CLOCK ${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_clock.c
                                                             ${IEC60730B_SRC_DIR}/common_test/clock/iec60730b_clock.c)
     zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_DIO ${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_dio.c

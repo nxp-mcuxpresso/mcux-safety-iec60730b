@@ -70,7 +70,7 @@ int iec60730b_test_dio_input(const struct device *port, gpio_pin_t pin, bool pin
 /* Test digital output pin for IEC 60730 Class B compliance */
 int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin)
 {
-    #define DIO_WAIT_CYCLE     75
+    #define DIO_WAIT_CYCLE     200
 #ifdef CONFIG_GPIO_MCUX
     fs_dio_test_t tested_pin;
 
