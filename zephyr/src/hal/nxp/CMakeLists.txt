@@ -78,6 +78,7 @@ if(CONFIG_IEC60730B_HAL_NXP)
     zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_FPU ${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_fpu.c)
     if(CONFIG_IEC60730B_TEST_AIO)
         zephyr_library_sources(${IEC60730B_SRC_DIR}/common_test/aio/iec60730b_aio.c)
+        zephyr_library_sources(${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_aio.c)
         zephyr_library_compile_options(-Wno-parentheses) # disable warning
     endif()
     if(CONFIG_IEC60730B_TEST_FLASH)

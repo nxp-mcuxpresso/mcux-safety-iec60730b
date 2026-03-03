@@ -8,6 +8,7 @@
 
 #include <zephyr/types.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/adc.h>
 
 /*******************************************************************************
  * Definitions
@@ -29,6 +30,7 @@
 #define IEC60730B_TEST_CLOCK_ERROR              (-8)     /* Clock test fault */
 #define IEC60730B_TEST_PC_ERROR                 (-9)     /* Program counter test fault */
 #define IEC60730B_TEST_DIO_ERROR                (-10)    /* Digital Input/Output test fault */
+#define IEC60730B_TEST_AIO_ERROR                (-11)    /* Analog Input/Output test fault */
 
 /*!
  * @brief RAM test algorithm types for IEC 60730 Class B compliance
@@ -87,6 +89,59 @@ typedef uint32_t iec60730b_flash_crc_t;
 #else /* CONFIG_IEC60730B_TEST_FLASH_CRC16 */
 typedef uint16_t iec60730b_flash_crc_t;
 #endif
+
+/*!
+ * @brief ADC channel limits structure for allowed ADC result
+ * used in Analog test for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_AIO}
+ * 
+ * This structure provides allowed upper, lower limits
+ * for raw ADC conversion result for Analog test to be valid
+ * for ADC module testing.
+ * 
+ */
+typedef struct
+{
+    uint32_t low;
+    uint32_t high;
+} iec60730b_adc_limits_t;
+
+/*!
+ * @brief Adc channel specification structure used in Analog test for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_AIO}
+ * 
+ * This structure provides the channel specification data for ADC module testing.
+ * 
+ */
+struct iec60730b_adc_channel {
+    
+    /* ADC resolution to be used for that channel. */
+    uint8_t resolution;
+    
+    /* Voltage of the reference selected for the channel
+     * specified in devicetree or by user application.
+     */
+    uint16_t vref_mv;
+    
+    /* Configuration of the associated ADC channel
+     * specified in devicetree or by user application.
+     */
+    struct adc_channel_cfg channel_cfg;
+    
+    /* ADC channel limits (high,low) specifying
+     * allowed guards for raw ADC conversion result
+     * with deviation accounted.
+     */
+    iec60730b_adc_limits_t limits;
+    
+    /* Allowed deviation range of measured value,
+     * percentage from maximum ADC value
+     * recommended deviation range value is 5 %
+     */
+    uint8_t allowed_deviation;
+};
 
 #ifdef __cplusplus
 extern "C" {
@@ -274,6 +329,41 @@ int iec60730b_test_clock_init(const struct device *counter, k_timeout_t timer_pe
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_clock(void);
+
+/*!
+ * @brief Initialize ADC channel for Safety AIO Test required by IEC 60730 Class B.
+ * 
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_AIO}
+ * 
+ * This function verifies that the adc device is ready (was initialized by zephyr),
+ * then sets up the specific ADC channel and calls function to set the channel limits.
+ * 
+ * @param dev Pointer to the ADC device structure used for measuring voltage to test the function of ADC module.
+ * @param channel Pointer to the ADC channel specification with parameters from board overlay or entered by user application.
+ * @param channel_expected_voltage_mv Voltage signal value in mV that is connected to the measuring ADC channel,
+ * and expected to be read by ADC conversion.
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_aio_init_channel(const struct device* dev, struct iec60730b_adc_channel* channel, uint32_t channel_expected_voltage_mv);
+
+/*!
+ * @brief Test analog input pins for IEC 60730 Class B compliance
+ * 
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_AIO}
+ * 
+ * This function performs analog input testing to detect hardware faults as required by
+ * IEC 60730 Class B. Function measures analog voltage on a specified ADC channel,
+ * then compares the measured value against the expected voltage value, counting
+ * with deviation tolerance to ensure the ADC hardware is functioning correctly.
+ * 
+ * @param dev Pointer to the ADC device structure used for measuring voltage
+ * to test the function of ADC module.
+ * @param channel Pointer to the ADC channel specification with parameters from user application or board overlay.
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_aio(const struct device* dev, struct iec60730b_adc_channel* channel);
 
 #ifdef __cplusplus
 }

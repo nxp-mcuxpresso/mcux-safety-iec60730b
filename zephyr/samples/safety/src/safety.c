@@ -15,6 +15,7 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/watchdog.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/adc.h>
 #include <zephyr/task_wdt/task_wdt.h>
 #include <zephyr/sys/reboot.h>
 
@@ -26,6 +27,9 @@ static void safety_thread(void *arg1, void *arg2, void *arg3);
 static void safety_error_handler(int error_code);
 static void safety_startup_tests(void);
 static void safety_rutime_tests(void);
+#ifdef CONFIG_IEC60730B_TEST_AIO
+static void enable_bandgap(void);
+#endif
 
 /* Register safety_tests module for logging */
 LOG_MODULE_REGISTER(safety, CONFIG_APP_SAFETY_LOG_LEVEL);
@@ -141,6 +145,77 @@ int safety_error_code; /* Global error code. */
     /* Counter device for clock frequency testing */
     static const struct device *test_reference_counter = DEVICE_DT_GET_OR_NULL(DT_ALIAS(test_counter));
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
+
+#ifdef CONFIG_IEC60730B_TEST_AIO
+    #if !DT_NODE_EXISTS(DT_PATH(zephyr_user)) || \
+    !DT_NODE_HAS_PROP(DT_PATH(zephyr_user), io_channels)
+        static const struct device *test_adc[] = {NULL, NULL, NULL};
+        static struct iec60730b_adc_channel channel[] = {{0},{0},{0}};
+        static void enable_bandgap(void)
+        {
+            /* Bandgap enabling not supported on this platform */
+        }
+    #else
+        static const struct adc_dt_spec adc_channels[] = {
+            /* Channel from DT connected to Low Voltage typically GND (0V) */
+            ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 0),
+            /* Channel from DT connected to High Voltage typically 3.3V */
+            ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 1),
+            /* Channel from DT connected to BandGap Voltage typically 1.65V */
+            ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 2),
+        };
+        static const struct device *test_adc[] =
+        {
+            adc_channels[0].dev,
+            adc_channels[1].dev,
+            adc_channels[2].dev
+        };
+        static struct iec60730b_adc_channel channel[] =
+        {
+            {
+                .channel_cfg = adc_channels[0].channel_cfg,
+                .vref_mv     = adc_channels[0].vref_mv,
+                .resolution  = adc_channels[0].resolution,
+                .allowed_deviation = 5U, /* allowed % of ADC max */
+            },
+            {
+                .channel_cfg = adc_channels[1].channel_cfg,
+                .vref_mv     = adc_channels[1].vref_mv,
+                .resolution  = adc_channels[1].resolution,
+                .allowed_deviation = 5U, /* allowed % of ADC max */
+            },
+            {
+                .channel_cfg = adc_channels[2].channel_cfg,
+                .vref_mv     = adc_channels[2].vref_mv,
+                .resolution  = adc_channels[2].resolution,
+                .allowed_deviation = 5U, /* allowed % of ADC max */
+            }
+        };
+        #if CONFIG_DT_HAS_NXP_SPC_ENABLED
+            /* 
+             * SDK driver for System-Power-Control needed for using bandgap control.
+             */
+            #include "fsl_spc.h"
+            /*
+             * Enable bandgap voltage reference needed for AIO Test,
+             * as one of the measured channel is internal bandgap voltage reference.
+             */
+            static void enable_bandgap(void)
+            {
+                /* Check if SPC instance is valid */
+                if (SPC0 != NULL) {
+                    /* Enable bandgap in active mode with buffer enabled - more stable voltage */
+                    SPC_SetActiveModeBandgapModeConfig(SPC0, kSPC_BandgapEnabledBufferEnabled);
+                }
+            }
+        #else
+            static void enable_bandgap(void)
+            {
+                /* Bandgap enabling not supported on this platform */
+            }
+        #endif /* CONFIG_DT_HAS_NXP_SPC_ENABLED */
+    #endif
+#endif /* CONFIG_IEC60730B_TEST_AIO */
 
 /* Task watchdog */
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
@@ -342,6 +417,34 @@ static void safety_startup_tests(void)
         safety_test_result_handler(result, "Clock test initialization");
     }
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
+
+#ifdef CONFIG_IEC60730B_TEST_AIO
+    /* Enable internal bandgap voltage reference for analog measurement,
+     * check datasheet for device specific bandgap voltage value */
+    enable_bandgap();
+    /* Init ADC channel with expected voltage in mV */
+    result = iec60730b_aio_init_channel(test_adc[0], &channel[0], 0U);
+    safety_test_result_handler(result, "AIO init VL");
+    /* Measuring channel with VREFL signal voltage connected */
+    result = iec60730b_test_aio(test_adc[0], &channel[0]);
+    safety_test_result_handler(result, "AIO test VL");
+
+    /* Init ADC channel with expected voltage in mV */
+    result = iec60730b_aio_init_channel(test_adc[1], &channel[1], 825U);
+    safety_test_result_handler(result, "AIO init VH");
+    /* Measuring channel with VREFH/4 signal voltage connected */
+    /* If your device has a lower reference voltage, adjust the value accordingly */
+    result = iec60730b_test_aio(test_adc[1], &channel[1]);
+    safety_test_result_handler(result, "AIO test VH");
+
+    /* Init ADC channel with expected voltage in mV */
+    result = iec60730b_aio_init_channel(test_adc[2], &channel[2], 1000U);
+    safety_test_result_handler(result, "AIO init BG");
+    /* Measuring channel with BandGap signal voltage connected */
+    /* If your device has a lower reference voltage, adjust the value accordingly */
+    result = iec60730b_test_aio(test_adc[2], &channel[2]);
+    safety_test_result_handler(result, "AIO test BG");
+#endif /* CONFIG_IEC60730B_TEST_AIO */
 }
 
 /*
@@ -409,6 +512,22 @@ static void safety_rutime_tests(void)
         safety_test_result_handler(result, "Clock test");
     }
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
+
+#ifdef CONFIG_IEC60730B_TEST_AIO
+    /* Measuring channel with VREFL signal voltage connected */
+    result = iec60730b_test_aio(test_adc[0], &channel[0]);
+    safety_test_result_handler(result, "AIO test VL");
+
+    /* Measuring channel with VREFH/4 signal voltage connected */
+    /* If your device has a lower reference voltage, adjust the value accordingly */
+    result = iec60730b_test_aio(test_adc[1], &channel[1]);
+    safety_test_result_handler(result, "AIO test VH");
+
+    /* Measuring channel with BandGap signal voltage connected */
+    /* If your device has a lower reference voltage, adjust the value accordingly */
+    result = iec60730b_test_aio(test_adc[2], &channel[2]);
+    safety_test_result_handler(result, "AIO test BG");
+#endif /* CONFIG_IEC60730B_TEST_AIO */
 
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
     task_wdt_feed(safety_task_wdt_id);

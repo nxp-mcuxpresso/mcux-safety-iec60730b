@@ -75,3 +75,14 @@ __weak int iec60730b_test_clock(void)
     return IEC60730B_TEST_NOT_SUPPORTED;
 }
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
+
+#ifdef CONFIG_IEC60730B_TEST_AIO
+__weak int iec60730b_aio_init_channel(const struct device* dev, struct iec60730b_adc_channel* channel, uint32_t channel_expected_voltage_mv)
+{
+    return IEC60730B_TEST_NOT_SUPPORTED;
+}
+__weak int iec60730b_test_aio(const struct device* dev, struct iec60730b_adc_channel* channel)
+{
+    return IEC60730B_TEST_NOT_SUPPORTED;
+}
+#endif /* CONFIG_IEC60730B_TEST_AIO */

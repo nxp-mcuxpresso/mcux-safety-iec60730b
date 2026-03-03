@@ -73,6 +73,12 @@ The console output will show the safety test execution status:
    safety: PASS: PC test
    safety: PASS: Flash test
    safety: PASS: Stack test initialization
+   safety: PASS: AIO init VL
+   safety: PASS: AIO test VL
+   safety: PASS: AIO init VH
+   safety: PASS: AIO test VH
+   safety: PASS: AIO init BG
+   safety: PASS: AIO test BG
    main: LED state: OFF
    safety: Safety test thread started
    safety: == Executing Run-time tests ==
@@ -84,6 +90,9 @@ The console output will show the safety test execution status:
    safety: PASS: Flash test
    safety: SKIP: DIO Input test
    safety: PASS: DIO Output test
+   safety: PASS: AIO test VL
+   safety: PASS: AIO test VH
+   safety: PASS: AIO test BG
    main: LED state: ON
    safety: == Executing Run-time tests ==
    safety: PASS: CPU Registers test
@@ -94,6 +103,9 @@ The console output will show the safety test execution status:
    safety: PASS: Flash test
    safety: SKIP: DIO Input test
    safety: PASS: DIO Output test
+   safety: PASS: AIO test VL
+   safety: PASS: AIO test VH
+   safety: PASS: AIO test BG
    main: LED state: OFF
    safety: == Executing Run-time tests ==
    safety: PASS: CPU Registers test
@@ -104,6 +116,9 @@ The console output will show the safety test execution status:
    safety: PASS: Flash test
    safety: SKIP: DIO Input test
    safety: PASS: DIO Output test
+   safety: PASS: AIO test VL
+   safety: PASS: AIO test VH
+   safety: PASS: AIO test BG
    main: LED state: ON
 
 Safety Considerations
@@ -122,6 +137,6 @@ consider engaging with safety certification experts.
 References
 **********
 
-* `IEC 60730-1 Standard <https://webstore.iec.ch/publication/3154>`_
+* `IEC 60730-1 Standard <https://webstore.iec.ch/publication/66089>`_
 * `NXP Safety IEC 60730-B Library Documentation`
 * `Zephyr Safety Documentation <https://docs.zephyrproject.org/latest/safety/>`_

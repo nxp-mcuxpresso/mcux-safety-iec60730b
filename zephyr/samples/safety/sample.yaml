@@ -9,3 +9,4 @@ tests:
       - frdm_mcxc444
       - frdm_rw612
       - mimxrt1170_evk/mimxrt1176/cm7
+      - frdm_mcxa266
