@@ -62,64 +62,53 @@ The console output will show the safety test execution status:
 
 .. code-block:: console
 
-   main: Set up button at gpio@0 pin 11
-   main: Set up led at gpio@0 pin 12
+   main: Set up button at gpio@40103000 pin 7
+   main: Set up led at gpio@40105000 pin 18
    *** Booting Zephyr OS build v4.3.0-5931-g8100484e5d43 ***
    safety: Perform startup safety tests:
    safety: == Executing Start-up tests ==
-   safety: PASS: CPU Registers test
-   safety: PASS: FPU Registers test
-   safety: PASS: RAM test
-   safety: PASS: PC test
-   safety: PASS: Flash test
-   safety: PASS: Stack test initialization
-   safety: PASS: AIO init VL
-   safety: PASS: AIO test VL
-   safety: PASS: AIO init VH
-   safety: PASS: AIO test VH
-   safety: PASS: AIO init BG
-   safety: PASS: AIO test BG
+   safety: - PASS - CPU Registers test
+   safety: - PASS - FPU Registers test
+   safety: - PASS - RAM test
+   safety: - PASS - PC test
+   safety: - PASS - Flash test
+   main: Set up button at gpio@40103000 pin 7
+   main: Set up led at gpio@40105000 pin 18
+   *** Booting Zephyr OS build v4.3.0-5931-g8100484e5d43 ***
+   safety: Perform startup safety tests:
+   safety: == Executing Start-up tests ==
+   safety: - PASS - CPU Registers test
+   safety: - PASS - FPU Registers test
+   safety: - PASS - RAM test
+   safety: - PASS - PC test
+   safety: - PASS - Flash test
+   safety: - PASS - Watchdog test
+   safety: - PASS - Stack test initialization
+   safety: - PASS - Clock test initialization
+   safety: - PASS - AIO init VL
+   safety: - PASS - AIO test VL
+   safety: - PASS - AIO init VH
+   safety: - PASS - AIO test VH
+   safety: - PASS - AIO init BG
+   safety: - PASS - AIO test BG
+   safety: Task WDT channel 0 added with timeout 10000 ms
    main: LED state: OFF
    safety: Safety test thread started
    safety: == Executing Run-time tests ==
-   safety: PASS: CPU Registers test
-   safety: PASS: FPU Registers test
-   safety: PASS: RAM test
-   safety: PASS: PC test
-   safety: PASS: Stack test
-   safety: PASS: Flash test
-   safety: SKIP: DIO Input test
-   safety: PASS: DIO Output test
-   safety: PASS: AIO test VL
-   safety: PASS: AIO test VH
-   safety: PASS: AIO test BG
+   safety: - PASS - CPU Registers test
+   safety: - PASS - FPU Registers test
+   safety: - PASS - RAM test
+   safety: - PASS - PC test
+   safety: - PASS - Stack test
+   safety: - PASS - Flash test
+   safety: - PASS - DIO Input test
+   safety: - PASS - DIO Output test
+   safety: - PASS - Clock test
+   safety: - PASS - AIO test VL
+   safety: - PASS - AIO test VH
+   safety: - PASS - AIO test BG
    main: LED state: ON
-   safety: == Executing Run-time tests ==
-   safety: PASS: CPU Registers test
-   safety: PASS: FPU Registers test
-   safety: PASS: RAM test
-   safety: PASS: PC test
-   safety: PASS: Stack test
-   safety: PASS: Flash test
-   safety: SKIP: DIO Input test
-   safety: PASS: DIO Output test
-   safety: PASS: AIO test VL
-   safety: PASS: AIO test VH
-   safety: PASS: AIO test BG
-   main: LED state: OFF
-   safety: == Executing Run-time tests ==
-   safety: PASS: CPU Registers test
-   safety: PASS: FPU Registers test
-   safety: PASS: RAM test
-   safety: PASS: PC test
-   safety: PASS: Stack test
-   safety: PASS: Flash test
-   safety: SKIP: DIO Input test
-   safety: PASS: DIO Output test
-   safety: PASS: AIO test VL
-   safety: PASS: AIO test VH
-   safety: PASS: AIO test BG
-   main: LED state: ON
+
 
 Safety Considerations
 *********************

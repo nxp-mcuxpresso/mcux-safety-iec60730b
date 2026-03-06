@@ -217,20 +217,15 @@ int safety_error_code; /* Global error code. */
     #endif
 #endif /* CONFIG_IEC60730B_TEST_AIO */
 
+#if CONFIG_IEC60730B_TEST_WDOG || CONFIG_APP_SAFETY_TASK_WATCHDOG
+    /* Watchdog device for watchdog testing */
+    static const struct device *const test_wdog = DEVICE_DT_GET_OR_NULL(DT_ALIAS(watchdog0));
+#endif /* CONFIG_IEC60730B_TEST_WDOG || CONFIG_APP_SAFETY_TASK_WATCHDOG */
+
 /* Task watchdog */
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-    #if DT_NODE_HAS_STATUS_OKAY(DT_ALIAS(watchdog0))
-    #define WDT_NODE DT_ALIAS(watchdog0)
-    #else
-    #define WDT_NODE DT_INVALID_NODE
-    #endif
-
-    static int safety_task_wdt_init(void);
     static void safety_task_wdt_callback(int channel_id, void *user_data);
     static int safety_task_wdt_id = -1;
-
-    /* System initialization hook for task watchdog initialization. */
-    SYS_INIT(safety_task_wdt_init, APPLICATION, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
 #endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
 
 /*******************************************************************************
@@ -256,16 +251,15 @@ static int safety_init(void)
 /*
  * Safety task watchdog initialization function executed during system startup.
  */
-static int safety_task_wdt_init(void)
+static void safety_task_wdt_init(void)
 {
     int result;
-    const struct device *const hw_wdt_dev = DEVICE_DT_GET_OR_NULL(WDT_NODE);
 
-    if (!device_is_ready(hw_wdt_dev)) {
+    if (!device_is_ready(test_wdog)) {
         LOG_WRN("Hardware watchdog not ready");
         result = task_wdt_init(NULL);
     } else {
-        result = task_wdt_init(hw_wdt_dev);
+        result = task_wdt_init(test_wdog);
     }
 
     if (result != 0) {
@@ -280,8 +274,6 @@ static int safety_task_wdt_init(void)
         safety_error_handler(IEC60730B_TEST_ERROR);
     }
     LOG_INF("Task WDT channel %d added with timeout %d ms", safety_task_wdt_id, CONFIG_APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS);
-
-    return 0;
 }
 
 /*
@@ -349,12 +341,13 @@ static void safety_test_result_handler(int result, const char *test_name)
      * as either PASS or SKIP.
      */
     if (result < 0) { 
+        LOG_ERR("- FAIL - %s", test_name);
         safety_error_handler(result);
     } else if(result == IEC60730B_TEST_OK) {
-        LOG_INF("PASS: %s", test_name);
+        LOG_INF("- PASS - %s", test_name);
     }
     else {
-        LOG_WRN("SKIP: %s", test_name);
+        LOG_WRN("- SKIP - %s", test_name);
     }
 }
 
@@ -403,6 +396,14 @@ static void safety_startup_tests(void)
     safety_test_result_handler(result, "Flash test");
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
+#ifdef CONFIG_IEC60730B_TEST_WDOG
+    /* It must run before TEST_CLOCK and APP_SAFETY_TASK_WATCHDOG */
+    if(device_is_ready(test_wdog) && device_is_ready(test_reference_counter)){
+        result = iec60730b_test_wdog(test_wdog, 1000 /* ms */, test_reference_counter, 20 /* % */);
+        safety_test_result_handler(result, "Watchdog test");
+    }
+#endif /* CONFIG_IEC60730B_TEST_WDOG */
+
 #ifdef CONFIG_IEC60730B_TEST_STACK
     result = iec60730b_test_stack_init(SAFETY_THREAD_STACK,
                                        SAFETY_THREAD_STACK_SIZE,
@@ -412,8 +413,8 @@ static void safety_startup_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_STACK */
 
 #ifdef CONFIG_IEC60730B_TEST_CLOCK
-    if(test_reference_counter != NULL) {
-        result = iec60730b_test_clock_init(test_reference_counter, K_MSEC(1000), 20);
+    if(device_is_ready(test_reference_counter)) {
+        result = iec60730b_test_clock_init(test_reference_counter, 1000 /* ms */, 20 /* % */);
         safety_test_result_handler(result, "Clock test initialization");
     }
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
@@ -445,6 +446,12 @@ static void safety_startup_tests(void)
     result = iec60730b_test_aio(test_adc[2], &channel[2]);
     safety_test_result_handler(result, "AIO test BG");
 #endif /* CONFIG_IEC60730B_TEST_AIO */
+
+/* Task watchdog initialization for run-time safety test monitoring */
+#ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
+    safety_task_wdt_init();
+#endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
+
 }
 
 /*
@@ -507,7 +514,7 @@ static void safety_rutime_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_DIO */
 
 #ifdef CONFIG_IEC60730B_TEST_CLOCK
-    if(test_reference_counter != NULL) {
+    if(device_is_ready(test_reference_counter)) {
         result = iec60730b_test_clock();
         safety_test_result_handler(result, "Clock test");
     }

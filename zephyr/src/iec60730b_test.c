@@ -65,7 +65,7 @@ __weak int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin)
 #endif /* CONFIG_IEC60730B_TEST_DIO */
 
 #ifdef CONFIG_IEC60730B_TEST_CLOCK
-__weak int iec60730b_test_clock_init(const struct device *counter, k_timeout_t timer_period, uint32_t tolerance_percent)
+__weak int iec60730b_test_clock_init(const struct device *counter, uint32_t timer_period_ms, uint32_t tolerance_percent)
 {
     return IEC60730B_TEST_NOT_SUPPORTED;
 }
@@ -86,3 +86,11 @@ __weak int iec60730b_test_aio(const struct device* dev, struct iec60730b_adc_cha
     return IEC60730B_TEST_NOT_SUPPORTED;
 }
 #endif /* CONFIG_IEC60730B_TEST_AIO */
+
+#ifdef CONFIG_IEC60730B_TEST_WDOG
+__weak int iec60730b_test_wdog(const struct device *wdog, uint32_t wdog_timeout_ms, const struct device *counter, uint32_t tolerance_percent)
+{
+    /* Default weak implementation */
+    return -ENOTSUP;
+}
+#endif /* CONFIG_IEC60730B_TEST_WDOG */

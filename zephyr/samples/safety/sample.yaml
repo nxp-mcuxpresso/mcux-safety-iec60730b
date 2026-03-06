@@ -6,7 +6,10 @@ tests:
       - safety
     integration_platforms:
       - frdm_mcxa156
+      - frdm_mcxa266
+      - frdm_mcxa344
       - frdm_mcxc444
+      - frdm_mcxn947/mcxn947/cpu0
+      - frdm_mcxn236
       - frdm_rw612
       - mimxrt1170_evk/mimxrt1176/cm7
-      - frdm_mcxa266

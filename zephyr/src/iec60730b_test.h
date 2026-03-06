@@ -218,8 +218,8 @@ int iec60730b_test_pc(void);
  * guard patterns and boundaries to detect stack overflow and underflow
  * conditions as required by IEC 60730 Class B.
  * 
- * @param stack_start Starting address of the stack memory area
- * @param stack_size Size of the stack memory area in bytes
+ * @param stack_start Starting address of the stack memory area.
+ * @param stack_size Size of the stack memory area in bytes.
  * @param guard_size Size of the guard area in bytes. The guard zones provide additional protection
  *                   by reserving memory before and after the actual thread stack.
  * @param guard_pattern Pattern value used for guard area initialization
@@ -237,11 +237,11 @@ int iec60730b_test_stack_init(void *stack_start, size_t stack_size, size_t guard
  * and boundaries to detect stack overflow and underflow conditions as
  * required by IEC 60730 Class B.
  * 
- * @param stack_start Starting address of the stack memory area
- * @param stack_size Size of the stack memory area in bytes
+ * @param stack_start Starting address of the stack memory area.
+ * @param stack_size Size of the stack memory area in bytes.
  * @param guard_size Size of the guard area in bytes. The guard zones provide additional protection
  *                   by reserving memory before and after the actual thread stack.
- * @param guard_pattern Pattern value used for guard area verification
+ * @param guard_pattern Pattern value used for guard area verification.
  * 
  * @return 0 on success, negative on failure
  */
@@ -257,9 +257,9 @@ int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size
  * required by IEC 60730 Class B. The test calculates a CRC checksum over
  * the specified memory region and compares it against the expected value.
  * 
- * @param start Starting address of the flash memory area to test
- * @param size Size of the flash memory area in bytes
- * @param crc_expected Expected CRC checksum value for comparison
+ * @param start Starting address of the flash memory area to test.
+ * @param size Size of the flash memory area in bytes.
+ * @param crc_expected Expected CRC checksum value for comparison.
  * 
  * @return 0 on success, negative on failure
  */
@@ -274,9 +274,9 @@ int iec60730b_test_flash_crc(const void *start, size_t size, iec60730b_flash_crc
  * of a specified GPIO pin and comparing it against the expected value to
  * detect hardware faults as required by IEC 60730 Class B.
  * 
- * @param port Pointer to the GPIO device structure
- * @param pin GPIO pin number to test
- * @param pin_expected_value Expected raw state of the pin (true for high, false for low)
+ * @param port Pointer to the GPIO device structure.
+ * @param pin GPIO pin number to test.
+ * @param pin_expected_value Expected raw state of the pin (true for high, false for low).
  * 
  * @return 0 on success, negative on failure
  */
@@ -291,8 +291,8 @@ int iec60730b_test_dio_input(const struct device *port, gpio_pin_t pin, bool pin
  * of a specified GPIO pin to detect hardware faults as required by 
  * IEC 60730 Class B.
  * 
- * @param port Pointer to the GPIO device structure
- * @param pin GPIO pin number to test
+ * @param port Pointer to the GPIO device structure.
+ * @param pin GPIO pin number to test.
  * 
  * @return 0 on success, negative on failure
  */
@@ -308,13 +308,13 @@ int iec60730b_test_dio_output(const struct device *port, gpio_pin_t pin);
  * as required by IEC 60730 Class B. The test verifies that the system
  * clock operates within acceptable tolerance limits.
  * 
- * @param counter Pointer to the counter device structure used for clock monitoring
- * @param timer_period Timer period for clock test measurements
- * @param tolerance_percent Acceptable clock deviation tolerance as a percentage
+ * @param counter Pointer to the counter device structure used for clock monitoring.
+ * @param timer_period_ms Timer period for clock test measurements in milliseconds.
+ * @param tolerance_percent Acceptable clock deviation tolerance as a percentage.
  * 
  * @return 0 on success, negative on failure
  */
-int iec60730b_test_clock_init(const struct device *counter, k_timeout_t timer_period, uint32_t tolerance_percent);
+int iec60730b_test_clock_init(const struct device *counter, uint32_t timer_period_ms, uint32_t tolerance_percent);
 
 /*!
  * @brief Perform clock test for IEC 60730 Class B compliance
@@ -364,6 +364,26 @@ int iec60730b_aio_init_channel(const struct device* dev, struct iec60730b_adc_ch
  * @return 0 on success, negative on failure
  */
 int iec60730b_test_aio(const struct device* dev, struct iec60730b_adc_channel* channel);
+
+
+/*!
+ * @brief Test watchdog timer for IEC 60730 Class B compliance
+ * 
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_WDOG}
+ * 
+ * This function performs watchdog timer testing to verify that the watchdog
+ * hardware is functioning correctly as required by IEC 60730 Class B. It uses
+ * a counter device to measure the actual watchdog timeout period and compares
+ * it against the expected timeout value within the specified tolerance.
+ * 
+ * @param wdog Pointer to the watchdog device structure to be tested.
+ * @param wdog_timeout_ms Expected watchdog timeout period in milliseconds.
+ * @param counter Pointer to the counter device structure used for measuring the actual timeout.
+ * @param tolerance_percent Acceptable deviation tolerance as a percentage of the expected timeout.
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_wdog(const struct device *wdog, uint32_t wdog_timeout_ms, const struct device *counter, uint32_t tolerance_percent);
 
 #ifdef __cplusplus
 }

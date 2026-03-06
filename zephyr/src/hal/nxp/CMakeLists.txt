@@ -95,6 +95,7 @@ if(CONFIG_IEC60730B_HAL_NXP)
                                                         ${IEC60730B_SRC_DIR}/common_test/dio/iec60730b_dio.c
                                                         ${IEC60730B_SRC_DIR}/common_test/dio/iec60730b_dio_ext.c )
     zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_TSI ${IEC60730B_SRC_DIR}/common_test/tsi/iec60730b_tsi.c)
-    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_WDOG ${IEC60730B_SRC_DIR}/common_test/wdog/iec60730b_wdog.c)
+    zephyr_library_sources_ifdef(CONFIG_IEC60730B_TEST_WDOG ${IEC60730B_ZEPHYR_HAL_NXP_SRC_DIR}/iec60730b_test_wdog.c
+                                                            ${IEC60730B_SRC_DIR}/common_test/wdog/iec60730b_wdog.c)
 
 endif() # CONFIG_IEC60730B_HAL_NXP

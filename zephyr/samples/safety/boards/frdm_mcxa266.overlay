@@ -3,10 +3,18 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-/ {
+/{
+	aliases {
+		test-counter = &ctimer0;
+	};
+
 	zephyr,user {
 		io-channels = <&lpadc0 0>, <&lpadc0 1>, <&lpadc0 2>;
 	};
+};
+
+&ctimer0 {
+	status = "okay";
 };
 
 &lpadc0 {

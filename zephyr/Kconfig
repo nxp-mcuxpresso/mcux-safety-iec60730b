@@ -171,6 +171,7 @@ if IEC60730B
     config IEC60730B_TEST_WDOG
         bool "IEC60730B Watchdog Test routines"
         default y
+        imply HWINFO
         help
           Enable Watchdog Timer test routines for the IEC60730B safety library.
           This test verifies the proper operation of the watchdog timer
@@ -178,5 +179,14 @@ if IEC60730B
           refresh mechanisms. The test ensures that the watchdog can detect
           software failures and generate system resets when required for
           safety-critical applications.
+
+    config IEC60730B_TEST_WDOG_LOG_LEVEL
+        int "Watchdog Test Log Level"
+        depends on IEC60730B_TEST_WDOG
+        default 0
+        range 0 4
+        help
+          Sets log level for IEC60730B watchdog test module.
+          Levels are: 0 OFF, 1 ERROR, 2 WARNING, 3 INFO, 4 DEBUG
 
 endif # IEC60730B
