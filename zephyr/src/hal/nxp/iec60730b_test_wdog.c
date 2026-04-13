@@ -33,6 +33,19 @@ LOG_MODULE_REGISTER(test_wdog, CONFIG_IEC60730B_TEST_WDOG_LOG_LEVEL);
         void (*irq_config_func)(const struct device *dev);
     };
 #endif
+#ifdef CONFIG_COUNTER_MCUX_GPT
+    /* from zephyr/drivers/counter/counter_mcux_gpt.c */
+    #include <zephyr/drivers/clock_control.h>
+    #define DEV_CFG(_dev) ((const struct mcux_gpt_config *)(_dev)->config)
+    struct mcux_gpt_config {
+        struct counter_config_info info;
+        DEVICE_MMIO_NAMED_ROM(gpt_mmio);
+        const struct device *clock_dev;
+        clock_control_subsys_t clock_subsys;
+        bool enable_free_run;
+        void (*irq_config_func)(void);
+    };
+#endif
 #ifdef CONFIG_WDT_MCUX_WWDT
     /* from zephyr/drivers/watchdog/wdt_mcux_wwdt.c */
     #include <fsl_wwdt.h>
@@ -40,6 +53,23 @@ LOG_MODULE_REGISTER(test_wdog, CONFIG_IEC60730B_TEST_WDOG_LOG_LEVEL);
         WWDT_Type *base;
         uint8_t clk_divider;
         void (*irq_config_func)(const struct device *dev);
+    };
+#endif
+#ifdef CONFIG_WDT_MCUX_RTWDOG
+    /* from zephyr/drivers/watchdog/wdt_mcux_rtwdog.c */
+    #include <fsl_rtwdog.h>
+    struct mcux_rtwdog_config {
+        RTWDOG_Type *base;
+        void (*irq_config_func)(const struct device *dev);
+    };
+#endif
+#ifdef CONFIG_WDT_MCUX_IMX_WDOG
+    /* from zephyr/drivers/watchdog/wdt_mcux_imx_wdog.c
+     * The WDOG base address is MMIO-mapped; first field of data struct is
+     * the mm_reg_t holding the mapped virtual address.
+     */
+    struct mcux_wdog_data_mmio {
+        mm_reg_t addr; /* DEVICE_MMIO_NAMED_RAM(reg) expands to mm_reg_t */
     };
 #endif
 
@@ -95,8 +125,8 @@ int iec60730b_test_wdog(const struct device *wdog, uint32_t wdog_timeout_ms, con
             }
         /* Reset was not caused by watchdog. Proceed to configure and start the watchdog test. */
         } else {
-        #ifdef CONFIG_COUNTER_MCUX_CTIMER
             const char *counter_name = counter->name;
+        #ifdef CONFIG_COUNTER_MCUX_CTIMER
             if (strstr(counter_name, "ctimer") != NULL) {
                 WatchdogBackup.RefTimerBase = (uint32_t)((struct mcux_lpc_ctimer_config*)counter->config)->base;
             #ifdef CONFIG_WDT_MCUX_WWDT
@@ -124,9 +154,51 @@ int iec60730b_test_wdog(const struct device *wdog, uint32_t wdog_timeout_ms, con
             #else /* CONFIG_WDT_MCUX_WWDT */
                 return IEC60730B_TEST_NOT_SUPPORTED;
             #endif
-            }
-            else
+            } else
         #endif /* CONFIG_COUNTER_MCUX_CTIMER */
+        #ifdef CONFIG_COUNTER_MCUX_GPT
+            if (strstr(counter_name, "gpt") != NULL) {
+                uint8_t gpt_refresh_index;
+
+                WatchdogBackup.RefTimerBase = (uint32_t)DEVICE_MMIO_NAMED_GET(counter, gpt_mmio);
+
+            #if defined(CONFIG_WDT_MCUX_RTWDOG)
+                WatchdogBackup.WdogBase = (uint32_t)((const struct mcux_rtwdog_config *)wdog->config)->base;
+                gpt_refresh_index = FS_IMXRT;
+            #elif defined(CONFIG_WDT_MCUX_IMX_WDOG)
+                /* WDOG1/2 on i.MX RT: base is MMIO-mapped, stored in dev->data */
+                WatchdogBackup.WdogBase = (uint32_t)((struct mcux_wdog_data_mmio *)wdog->data)->addr;
+                gpt_refresh_index = FS_IMXRT1170;
+            #else
+                return IEC60730B_TEST_NOT_SUPPORTED;
+            #endif
+
+                struct wdt_timeout_cfg wdog_config = {
+                    .flags = WDT_FLAG_RESET_SOC,    /* Reset SoC when watchdog timer expires */
+                    .window.max = wdog_timeout_ms,  /* Expire watchdog after max window */
+                };
+                WatchdogBackup.counter = 0;
+
+                LOG_DBG("Setup watchdog");
+                ret = wdt_install_timeout(wdog, &wdog_config);
+                if (ret < 0) {
+                    LOG_ERR("Watchdog install timeout error: %d", ret);
+                    return IEC60730B_TEST_WDT_ERROR;
+                }
+                ret = wdt_setup(wdog, WDT_OPT_PAUSE_HALTED_BY_DBG);
+                if (ret < 0) {
+                    LOG_ERR("Watchdog setup error: %d", ret);
+                    return IEC60730B_TEST_WDT_ERROR;
+                }
+                LOG_DBG("Start counter and waiting for reset...\n");
+                ret = counter_start(counter);
+                if (ret < 0) {
+                    LOG_ERR("Counter start error: %d", ret);
+                    return IEC60730B_TEST_WDT_ERROR;
+                }
+                FS_WDOG_Setup_IMX_GPT(&WatchdogBackup, gpt_refresh_index);
+            } else
+        #endif /* CONFIG_COUNTER_MCUX_GPT */
                 return IEC60730B_TEST_NOT_SUPPORTED;
         }
     } else if (ret == -ENOSYS) {

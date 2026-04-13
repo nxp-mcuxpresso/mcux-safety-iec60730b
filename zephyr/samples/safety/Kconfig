@@ -35,7 +35,7 @@ config APP_SAFETY_PERIOD_MS
 menuconfig APP_SAFETY_TASK_WATCHDOG
     bool "Safety Task Watchdog"
     default y
-    depends on TASK_WDT
+    select TASK_WDT
     help
       Enable task watchdog for safety monitoring. The task watchdog
       monitors the safety test thread and triggers a callback if
@@ -53,6 +53,14 @@ config APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS
       This should be larger than CONFIG_APP_SAFETY_TESTS_PERIOD_MS
       to allow for test execution time. If the safety thread doesn't
       feed the watchdog within this time, the callback will be triggered.
+
+config TASK_WDT_MIN_TIMEOUT
+    int "Minimum task watchdog timeout in milliseconds"
+    default 500
+    help
+      Minimum timeout value accepted by the task watchdog channel.
+      Required by the wdt_mcux_wdog hardware watchdog driver backend.
+      Minum 500 is required by wdt_mcux_wdog driver.
 
 endif # APP_SAFETY_TASK_WATCHDOG
 

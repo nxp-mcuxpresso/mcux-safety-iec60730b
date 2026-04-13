@@ -27,7 +27,7 @@ int iec60730b_test_stack_init(void *stack_start, size_t stack_size, size_t guard
 }
 
 /*
- * @brief Test stack integrity for IEC 60730 Class B compliance
+ * Test stack integrity for IEC 60730 Class B compliance
  */
 int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size, uint32_t guard_pattern)
 {

@@ -124,13 +124,12 @@ int safety_error_code; /* Global error code. */
         0x0000FD0F, 0x0000ECFE, 0x0000DFED, 0x0000CEDC, 0x0000BDCB, 0x0000ACBA, 0x00009BA9, 0x00008A98
     };
 
-    /* Pre-calculated CRC value for the test buffer */
+    /* Pre-calculated CRC values for the test buffer */
     #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
-    #define SAFETY_TEST_FLASH_BUFFER_CRC (0x228B7931)
-    #elif CONFIG_IEC60730B_TEST_FLASH_CRC16
-    #define SAFETY_TEST_FLASH_BUFFER_CRC (0x00F9)
-    #else
-    #error Not supported CONFIG_IEC60730B_TEST_FLASH_xxx
+    #define SAFETY_TEST_FLASH_BUFFER_CRC32 (0x228B7931)
+    #endif
+    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
+    #define SAFETY_TEST_FLASH_BUFFER_CRC16 (0x00F9)
     #endif
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
@@ -141,7 +140,7 @@ int safety_error_code; /* Global error code. */
     static const struct gpio_dt_spec test_gpio_output = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 #endif /* CONFIG_IEC60730B_TEST_DIO */
 
-#if CONFIG_IEC60730B_TEST_CLOCK
+#if defined(CONFIG_IEC60730B_TEST_CLOCK) || defined(CONFIG_IEC60730B_TEST_WDOG)
     /* Counter device for clock frequency testing */
     static const struct device *test_reference_counter = DEVICE_DT_GET_OR_NULL(DT_ALIAS(test_counter));
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
@@ -390,10 +389,19 @@ static void safety_startup_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_PC */
 
 #ifdef CONFIG_IEC60730B_TEST_FLASH
-    result = iec60730b_test_flash_crc(safety_test_flash_buffer,
-                                      sizeof(safety_test_flash_buffer),
-                                      SAFETY_TEST_FLASH_BUFFER_CRC);
-    safety_test_result_handler(result, "Flash test");
+    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
+    result = iec60730b_test_flash_crc16(safety_test_flash_buffer,
+                                        sizeof(safety_test_flash_buffer),
+                                        SAFETY_TEST_FLASH_BUFFER_CRC16);
+    safety_test_result_handler(result, "Flash CRC16 test");
+    #endif /* CONFIG_IEC60730B_TEST_FLASH_CRC16 */
+
+    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
+    result = iec60730b_test_flash_crc32(safety_test_flash_buffer,
+                                        sizeof(safety_test_flash_buffer),
+                                        SAFETY_TEST_FLASH_BUFFER_CRC32);
+    safety_test_result_handler(result, "Flash CRC32 test");
+    #endif /* CONFIG_IEC60730B_TEST_FLASH_CRC32 */
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_WDOG
@@ -420,31 +428,37 @@ static void safety_startup_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
 
 #ifdef CONFIG_IEC60730B_TEST_AIO
-    /* Enable internal bandgap voltage reference for analog measurement,
-     * check datasheet for device specific bandgap voltage value */
-    enable_bandgap();
-    /* Init ADC channel with expected voltage in mV */
-    result = iec60730b_aio_init_channel(test_adc[0], &channel[0], 0U);
-    safety_test_result_handler(result, "AIO init VL");
-    /* Measuring channel with VREFL signal voltage connected */
-    result = iec60730b_test_aio(test_adc[0], &channel[0]);
-    safety_test_result_handler(result, "AIO test VL");
+    if(device_is_ready(test_adc[0])) {
+        /* Init ADC channel with expected voltage in mV */
+        result = iec60730b_aio_init_channel(test_adc[0], &channel[0], 0U);
+        safety_test_result_handler(result, "AIO init VL");
+        /* Measuring channel with VREFL signal voltage connected */
+        result = iec60730b_test_aio(test_adc[0], &channel[0]);
+        safety_test_result_handler(result, "AIO test VL");
+    }
 
-    /* Init ADC channel with expected voltage in mV */
-    result = iec60730b_aio_init_channel(test_adc[1], &channel[1], 825U);
-    safety_test_result_handler(result, "AIO init VH");
-    /* Measuring channel with VREFH/4 signal voltage connected */
-    /* If your device has a lower reference voltage, adjust the value accordingly */
-    result = iec60730b_test_aio(test_adc[1], &channel[1]);
-    safety_test_result_handler(result, "AIO test VH");
+    if(device_is_ready(test_adc[1])) {
+        /* Init ADC channel with expected voltage in mV */
+        result = iec60730b_aio_init_channel(test_adc[1], &channel[1], 825U);
+        safety_test_result_handler(result, "AIO init VH");
+        /* Measuring channel with VREFH/4 signal voltage connected */
+        /* If your device has a lower reference voltage, adjust the value accordingly */
+        result = iec60730b_test_aio(test_adc[1], &channel[1]);
+        safety_test_result_handler(result, "AIO test VH");
+    }
 
-    /* Init ADC channel with expected voltage in mV */
-    result = iec60730b_aio_init_channel(test_adc[2], &channel[2], 1000U);
-    safety_test_result_handler(result, "AIO init BG");
-    /* Measuring channel with BandGap signal voltage connected */
-    /* If your device has a lower reference voltage, adjust the value accordingly */
-    result = iec60730b_test_aio(test_adc[2], &channel[2]);
-    safety_test_result_handler(result, "AIO test BG");
+    if(device_is_ready(test_adc[2])) {
+        /* Enable internal bandgap voltage reference for analog measurement,
+        * check datasheet for device specific bandgap voltage value */
+        enable_bandgap();
+        /* Init ADC channel with expected voltage in mV */
+        result = iec60730b_aio_init_channel(test_adc[2], &channel[2], 1000U);
+        safety_test_result_handler(result, "AIO init BG");
+        /* Measuring channel with BandGap signal voltage connected */
+        /* If your device has a lower reference voltage, adjust the value accordingly */
+        result = iec60730b_test_aio(test_adc[2], &channel[2]);
+        safety_test_result_handler(result, "AIO test BG");
+    }
 #endif /* CONFIG_IEC60730B_TEST_AIO */
 
 /* Task watchdog initialization for run-time safety test monitoring */
@@ -498,10 +512,19 @@ static void safety_rutime_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_STACK */
 
 #ifdef CONFIG_IEC60730B_TEST_FLASH
-    result = iec60730b_test_flash_crc(safety_test_flash_buffer,
-                                      sizeof(safety_test_flash_buffer),
-                                      SAFETY_TEST_FLASH_BUFFER_CRC);
-    safety_test_result_handler(result, "Flash test");
+    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
+    result = iec60730b_test_flash_crc16(safety_test_flash_buffer,
+                                        sizeof(safety_test_flash_buffer),
+                                        SAFETY_TEST_FLASH_BUFFER_CRC16);
+    safety_test_result_handler(result, "Flash CRC16 test");
+    #endif /* CONFIG_IEC60730B_TEST_FLASH_CRC16 */
+
+    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
+    result = iec60730b_test_flash_crc32(safety_test_flash_buffer,
+                                        sizeof(safety_test_flash_buffer),
+                                        SAFETY_TEST_FLASH_BUFFER_CRC32);
+    safety_test_result_handler(result, "Flash CRC32 test");
+    #endif /* CONFIG_IEC60730B_TEST_FLASH_CRC32 */
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_DIO
@@ -521,19 +544,25 @@ static void safety_rutime_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_AIO
-    /* Measuring channel with VREFL signal voltage connected */
-    result = iec60730b_test_aio(test_adc[0], &channel[0]);
-    safety_test_result_handler(result, "AIO test VL");
+    if(device_is_ready(test_adc[0])) {
+        /* Measuring channel with VREFL signal voltage connected */
+        result = iec60730b_test_aio(test_adc[0], &channel[0]);
+        safety_test_result_handler(result, "AIO test VL");
+    }
 
-    /* Measuring channel with VREFH/4 signal voltage connected */
-    /* If your device has a lower reference voltage, adjust the value accordingly */
-    result = iec60730b_test_aio(test_adc[1], &channel[1]);
-    safety_test_result_handler(result, "AIO test VH");
+    if(device_is_ready(test_adc[1])) {
+        /* Measuring channel with VREFH/4 signal voltage connected */
+        /* If your device has a lower reference voltage, adjust the value accordingly */
+        result = iec60730b_test_aio(test_adc[1], &channel[1]);
+        safety_test_result_handler(result, "AIO test VH");
+    }
 
-    /* Measuring channel with BandGap signal voltage connected */
-    /* If your device has a lower reference voltage, adjust the value accordingly */
-    result = iec60730b_test_aio(test_adc[2], &channel[2]);
-    safety_test_result_handler(result, "AIO test BG");
+    if(device_is_ready(test_adc[2])) {
+        /* Measuring channel with BandGap signal voltage connected */
+        /* If your device has a lower reference voltage, adjust the value accordingly */
+        result = iec60730b_test_aio(test_adc[2], &channel[2]);
+        safety_test_result_handler(result, "AIO test BG");
+    }
 #endif /* CONFIG_IEC60730B_TEST_AIO */
 
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG

@@ -46,10 +46,19 @@ __weak int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t gua
 #endif /* CONFIG_IEC60730B_TEST_STACK */
 
 #ifdef CONFIG_IEC60730B_TEST_FLASH
-__weak int iec60730b_test_flash_crc(const void *start, size_t size, iec60730b_flash_crc_t crc_expected)
+#ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
+__weak int iec60730b_test_flash_crc16(const void *start, size_t size, uint16_t crc_expected)
 {
     return IEC60730B_TEST_NOT_SUPPORTED;
 }
+#endif /* CONFIG_IEC60730B_TEST_FLASH_CRC16 */
+
+#ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
+__weak int iec60730b_test_flash_crc32(const void *start, size_t size, uint32_t crc_expected)
+{
+    return IEC60730B_TEST_NOT_SUPPORTED;
+}
+#endif /* CONFIG_IEC60730B_TEST_FLASH_CRC32 */
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_DIO
@@ -91,6 +100,6 @@ __weak int iec60730b_test_aio(const struct device* dev, struct iec60730b_adc_cha
 __weak int iec60730b_test_wdog(const struct device *wdog, uint32_t wdog_timeout_ms, const struct device *counter, uint32_t tolerance_percent)
 {
     /* Default weak implementation */
-    return -ENOTSUP;
+    return IEC60730B_TEST_NOT_SUPPORTED;
 }
 #endif /* CONFIG_IEC60730B_TEST_WDOG */

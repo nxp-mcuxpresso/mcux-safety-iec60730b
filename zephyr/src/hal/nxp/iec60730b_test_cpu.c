@@ -51,7 +51,7 @@ int iec60730b_test_cpu(void)
     }
 
     /* CONTROL */
-#ifdef CONFIG_IEC60730B_TEST_FPU
+#ifdef CONFIG_CPU_HAS_FPU
     if (FS_CM4_CM7_CPU_ControlFpu() == FS_FAIL_CPU_CONTROL){
         return IEC60730B_TEST_CPU_ERROR;
     }
@@ -144,7 +144,7 @@ int iec60730b_test_cpu(void)
         return IEC60730B_TEST_CPU_ERROR;
     }
 #else 
-    #ifdef CONFIG_IEC60730B_TEST_FPU
+    #ifdef CONFIG_CPU_HAS_FPU
         if (FS_CM33_CPU_Control() == FS_FAIL_CPU_CONTROL){
             return IEC60730B_TEST_CPU_ERROR;
         }

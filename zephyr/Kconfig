@@ -10,7 +10,9 @@ if IEC60730B
 
     choice IEC60730B_HAL
         prompt "IEC60730B Hardware Abstraction Layer (HAL) Selection"
-        default IEC60730B_HAL_NXP
+        default IEC60730B_HAL_NXP if SOC_FAMILY_MCXN || SOC_FAMILY_MCXW || SOC_FAMILY_MCXA || SOC_FAMILY_MCXC || \
+                                     SOC_FAMILY_KINETIS || SOC_FAMILY_NXP_IMX || SOC_FAMILY_NXP_IMXRT || SOC_FAMILY_LPC || SOC_FAMILY_NXP_S32 || SOC_FAMILY_NXP_RW
+        default IEC60730B_HAL_ZEPHYR
         help
           Select the Hardware Abstraction Layer (HAL) implementation for
           IEC60730B safety tests. Different HAL implementations provide
@@ -20,9 +22,26 @@ if IEC60730B
         bool "IEC60730B NXP HAL"
         help
           Use NXP-specific Hardware Abstraction Layer implementation for
-          IEC60730B safety tests. This provides optimized test implementations
-          for NXP microcontrollers including Cortex-M0+, Cortex-M4, Cortex-M7,
-          and Cortex-M33 based devices.
+          IEC60730B safety tests. This HAL is backed by the NXP-precertified
+          IEC 60730B safety library, which has been independently evaluated
+          and certified for use in safety-critical applications. It provides
+          optimized, certified test implementations for NXP microcontrollers
+          including Cortex-M0+, Cortex-M4, Cortex-M7, and Cortex-M33 based
+          devices.
+
+    config IEC60730B_HAL_ZEPHYR
+        bool "IEC60730B Zephyr HAL (EXPERIMENTAL)"
+        help
+          EXPERIMENTAL: Use generic Zephyr API-based Hardware Abstraction Layer
+          implementation for IEC60730B safety tests. This provides portable test
+          implementations using standard Zephyr APIs, suitable for any platform
+          supported by Zephyr RTOS.
+
+          WARNING: This HAL does NOT use any vendor-certified libraries. None of
+          the code in this HAL has been certified against IEC 60730B or any other
+          safety standard. Users are solely responsible for evaluating, validating,
+          and certifying all code for their specific application and target platform
+          before use in any safety-critical product.
 
     config IEC60730B_HAL_NONE
         bool "No IEC60730B HAL"
@@ -81,26 +100,26 @@ if IEC60730B
 
     if IEC60730B_TEST_FLASH
 
-    choice IEC60730B_TEST_FLASH_CRC
-        prompt "CRC Algorithm Type"
-        default IEC60730B_TEST_FLASH_CRC16 if CPU_CORTEX_M0PLUS
-        default IEC60730B_TEST_FLASH_CRC32
-        help
-          Select the CRC algorithm type for flash memory integrity testing.
-          Different CRC types provide different levels of error detection
-          capability and performance characteristics.
-
     config IEC60730B_TEST_FLASH_CRC16
-        bool "CRC-16"
+        bool "IEC60730B Flash CRC16 Algorithm"
+        default y
         help
-          16-bit CRC algorithm (CCITT - 0x1021).
+          Enable CRC16 (16-bit Cyclic Redundancy Check) algorithm for flash
+          memory integrity testing. CRC16 provides good error detection
+          capabilities with faster computation and lower memory overhead
+          compared to CRC32. Suitable for most IEC 60730 Class B applications
+          where flash memory size is moderate.
 
     config IEC60730B_TEST_FLASH_CRC32
-        bool "CRC-32"
+        bool "IEC60730B Flash CRC32 Algorithm"
+        default y
         help
-          32-bit CRC algorithm (MPEG-2 - 0x04C11DB7).
-
-    endchoice
+          Enable CRC32 (32-bit Cyclic Redundancy Check) algorithm for flash
+          memory integrity testing. CRC32 provides superior error detection
+          capabilities compared to CRC16, making it suitable for applications
+          with larger flash memory or higher safety integrity requirements.
+          The trade-off is slightly longer computation time and higher
+          memory overhead for storing checksums.
 
     config IEC60730B_TEST_FLASH_CRC_SEED
         hex "CRC seed value for flash test"
@@ -124,6 +143,7 @@ if IEC60730B
     config IEC60730B_TEST_AIO
         bool "IEC60730B Analog Input/Output test routines"
         default y
+        select CONFIG_ADC
         help
           Enable Analog Input/Output (AIO) test routines for the IEC60730B safety library.
           This test verifies the integrity of analog input and
@@ -143,6 +163,15 @@ if IEC60730B
           ensuring proper timing for safety-critical operations. The test
           can detect clock source failures, PLL lock issues, and frequency
           drift that could affect system timing requirements.
+
+    config IEC60730B_TEST_CLOCK_LOG_LEVEL
+        int "Clock Test Log Level"
+        depends on IEC60730B_TEST_CLOCK
+        default 0
+        range 0 4
+        help
+          Sets log level for IEC60730B clock test module.
+          Levels are: 0 OFF, 1 ERROR, 2 WARNING, 3 INFO, 4 DEBUG
 
     config IEC60730B_TEST_DIO
         bool "IEC60730B Digital Input/Output test routines"
@@ -171,7 +200,9 @@ if IEC60730B
     config IEC60730B_TEST_WDOG
         bool "IEC60730B Watchdog Test routines"
         default y
-        imply HWINFO
+        select HWINFO
+        select COUNTER
+        select WATCHDOG
         help
           Enable Watchdog Timer test routines for the IEC60730B safety library.
           This test verifies the proper operation of the watchdog timer
@@ -188,5 +219,13 @@ if IEC60730B
         help
           Sets log level for IEC60730B watchdog test module.
           Levels are: 0 OFF, 1 ERROR, 2 WARNING, 3 INFO, 4 DEBUG
+
+if IEC60730B_HAL_ZEPHYR
+rsource "src/hal/zephyr/Kconfig"
+endif # IEC60730B_HAL_ZEPHYR
+
+if IEC60730B_HAL_NXP
+rsource "src/hal/nxp/Kconfig"
+endif # IEC60730B_HAL_NXP
 
 endif # IEC60730B

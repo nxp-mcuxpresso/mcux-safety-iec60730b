@@ -12,3 +12,8 @@
 &lptmr0 {
 	status = "okay";
 };
+
+/* COP does not support run-time configuration, so disable it */
+&cop {
+	status = "disabled";
+};

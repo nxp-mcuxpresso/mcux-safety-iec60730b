@@ -76,19 +76,6 @@ typedef enum {
     IEC60730B_TEST_RAM_TYPE_MARCH_X
 } iec60730b_test_ram_type_t;
 
-/*!
- * @brief Flash CRC data type for IEC 60730 Class B compliance
- *
- * @kconfig_dep{CONFIG_IEC60730B_TEST_FLASH}
- * 
- * This type definition provides the appropriate CRC data type for flash
- * memory integrity testing. 
- */
-#ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
-typedef uint32_t iec60730b_flash_crc_t;
-#else /* CONFIG_IEC60730B_TEST_FLASH_CRC16 */
-typedef uint16_t iec60730b_flash_crc_t;
-#endif
 
 /*!
  * @brief ADC channel limits structure for allowed ADC result
@@ -248,22 +235,40 @@ int iec60730b_test_stack_init(void *stack_start, size_t stack_size, size_t guard
 int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size, uint32_t guard_pattern);
 
 /*!
- * @brief Test flash memory using CRC for IEC 60730 Class B compliance
+ * @brief Test flash memory using CRC16 for IEC 60730 Class B compliance
  *
- * @kconfig_dep{CONFIG_IEC60730B_TEST_FLASH}
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_FLASH_CRC16}
  * 
- * This function performs flash memory integrity testing using CRC checksum
+ * This function performs flash memory integrity testing using CRC16 checksum
  * calculation to detect memory corruption and ensure data integrity as
- * required by IEC 60730 Class B. The test calculates a CRC checksum over
+ * required by IEC 60730 Class B. The test calculates a CRC16 checksum over
  * the specified memory region and compares it against the expected value.
  * 
  * @param start Starting address of the flash memory area to test.
  * @param size Size of the flash memory area in bytes.
- * @param crc_expected Expected CRC checksum value for comparison.
+ * @param crc_expected Expected CRC16 checksum value for comparison.
  * 
  * @return 0 on success, negative on failure
  */
-int iec60730b_test_flash_crc(const void *start, size_t size, iec60730b_flash_crc_t crc_expected);
+int iec60730b_test_flash_crc16(const void *start, size_t size, uint16_t crc_expected);
+
+/*!
+ * @brief Test flash memory using CRC32 for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_FLASH_CRC32}
+ * 
+ * This function performs flash memory integrity testing using CRC32 checksum
+ * calculation to detect memory corruption and ensure data integrity as
+ * required by IEC 60730 Class B. The test calculates a CRC32 checksum over
+ * the specified memory region and compares it against the expected value.
+ * 
+ * @param start Starting address of the flash memory area to test.
+ * @param size Size of the flash memory area in bytes.
+ * @param crc_expected Expected CRC32 checksum value for comparison.
+ * 
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_flash_crc32(const void *start, size_t size, uint32_t crc_expected);
 
 /*!
  * @brief Test digital input pin for IEC 60730 Class B compliance

@@ -11,5 +11,6 @@ tests:
       - frdm_mcxc444
       - frdm_mcxn947/mcxn947/cpu0
       - frdm_mcxn236
+      - frdm_imxrt1186/mimxrt1186/cm33
       - frdm_rw612
       - mimxrt1170_evk/mimxrt1176/cm7

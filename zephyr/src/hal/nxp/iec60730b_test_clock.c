@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 NXP
+ * Copyright 2025-2026 NXP
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,7 +8,10 @@
 #include <iec60730b_core.h>
 #include <zephyr/drivers/counter.h>
 
-/* NOTE:  CTIMERs on NXP LPC/MCX parts does not auto‑freeze when you pause at a breakpoint. 
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(test_clock, CONFIG_IEC60730B_TEST_CLOCK_LOG_LEVEL);
+
+/* NOTE: Some timers do not auto-freeze when you pause at a breakpoint. 
  * Disable breakpoints, otherwise the clock test may fail.
  */
 
@@ -40,7 +43,7 @@
         DEVICE_MMIO_NAMED_ROM(gpt_mmio);
         const struct device *clock_dev;
         clock_control_subsys_t clock_subsys;
-        clock_name_t clock_source;
+        bool enable_free_run;
         void (*irq_config_func)(void);
     };
     static void *gpt_base;
@@ -62,43 +65,71 @@
     static void *ctimer_base;
 #endif
 
-static uint32_t counter_ticks;
+/*
+ * Elapsed counter ticks captured during the most recent timer period.
+ * Written inside the k_timer ISR, read by iec60730b_test_clock().
+ * Declared volatile so the compiler does not cache the value in a register
+ * across the periodic check call.
+ */
+static uint32_t counter_ticks_elapsed;
+
+/* Acceptable counter-tick window computed once during init */
 static uint32_t counter_ticks_limit_high;
 static uint32_t counter_ticks_limit_low;
-static bool clock_test_start;
 
-/* This function is called from the system clock interrupt handler to capture precise counter values at regular intervals.*/
+/*
+ * Flag set to true after the first timer interrupt fires.
+ * Prevents iec60730b_test_clock() from evaluating a result before the
+ * first valid measurement has been captured.
+ */
+static bool clock_test_started;
+
+/*
+ * Periodic k_timer callback — runs in interrupt context.
+ * Reads the current counter value (= ticks elapsed since the last reset),
+ * stores it, then resets the counter.
+ */
 static void iec60730b_test_clock_timer_handler(struct k_timer *timer)
 {
-    /* This runs in interrupt context */
 
 #ifdef CONFIG_COUNTER_MCUX_LPTMR
     if(lptmr_base) {
-        FS_CLK_LPTMR(lptmr_base, &counter_ticks);
+        FS_CLK_LPTMR(lptmr_base, &counter_ticks_elapsed);
     } else
 #endif
 #ifdef CONFIG_COUNTER_MCUX_GPT
     if(gpt_base) {
-        FS_CLK_GPT(gpt_base, &counter_ticks);
+        FS_CLK_GPT(gpt_base, &counter_ticks_elapsed);
     } else
 #endif
 #ifdef CONFIG_COUNTER_MCUX_CTIMER
     if(ctimer_base) {
-        FS_CLK_CTIMER(ctimer_base, &counter_ticks);
-    }
+        FS_CLK_CTIMER(ctimer_base, &counter_ticks_elapsed);
+    } else
 #endif
-    clock_test_start = true; /* to prevent checking of result before execution */
+    {}
+
+	clock_test_started = true;
 }
 
-/* Timer definition for the clock test, triggers the handler at regular intervals */
-static K_TIMER_DEFINE(iec60730b_test_clock_timer, iec60730b_test_clock_timer_handler, NULL);
+/* Periodic timer that drives the clock test measurements */
+static K_TIMER_DEFINE(iec60730b_test_clock_timer,
+		              iec60730b_test_clock_timer_handler, NULL);
 
-/* Initialize clock test for IEC 60730 Class B compliance */
-int iec60730b_test_clock_init(const struct device *counter, uint32_t timer_period_ms, uint32_t tolerance_percent)
+/*
+ * Initialize clock test for IEC 60730 Class B compliance.
+ *
+ * Configures the reference counter, computes the expected tick window, and
+ * starts both the counter and the periodic measurement timer.
+ */
+int iec60730b_test_clock_init(const struct device *counter,
+			                  uint32_t timer_period_ms,
+			                  uint32_t tolerance_percent)
 {
-    uint32_t clock_test_tolerance;
-    uint32_t clock_test_expected;
-    uint32_t counter_frequency;
+	uint32_t counter_frequency;
+	uint32_t clock_test_expected;
+	uint32_t clock_test_tolerance;
+	int ret;
 
     /* Initialize the base pointer for the hardware counter peripheral */
 #ifdef CONFIG_COUNTER_MCUX_LPTMR
@@ -108,7 +139,7 @@ int iec60730b_test_clock_init(const struct device *counter, uint32_t timer_perio
 #endif
 #ifdef CONFIG_COUNTER_MCUX_GPT
     if (strstr(counter->name, "gpt") != NULL) {
-        gpt_base = DEVICE_MMIO_NAMED_GET(counter, gpt_mmio);
+        gpt_base = (void *)DEVICE_MMIO_NAMED_GET(counter, gpt_mmio);
     } else
 #endif
 #ifdef CONFIG_COUNTER_MCUX_CTIMER
@@ -116,44 +147,79 @@ int iec60730b_test_clock_init(const struct device *counter, uint32_t timer_perio
         ctimer_base = ((struct mcux_lpc_ctimer_config*)counter->config)->base;
     } else
 #endif
-        return IEC60730B_TEST_NOT_SUPPORTED;
+    return IEC60730B_TEST_NOT_SUPPORTED;
 
-    /* Get the frequency of the reference counter in Hz */
-    counter_frequency = counter_get_frequency(counter);
-    /* Calculate the expected number of reference counter ticks during one timer period */
-    clock_test_expected = ((uint64_t)counter_frequency * timer_period_ms) / 1000;
-    /* Calculate the tolerance value as a percentage of the expected counter value */
-    clock_test_tolerance = ((uint64_t)clock_test_expected * tolerance_percent) / 100;
+	/* Get the frequency of the reference counter in Hz */
+	counter_frequency = counter_get_frequency(counter);
+	if (counter_frequency == 0U) {
+		LOG_ERR("Counter frequency is 0");
+		return IEC60730B_TEST_ERROR;
+	}
 
-    counter_ticks_limit_high = clock_test_expected + clock_test_tolerance;
-    counter_ticks_limit_low = clock_test_expected - clock_test_tolerance;
-    clock_test_start    = false; /* clock test result will be processed after the first interrupt occurs */
+	/* Expected counter ticks during one timer period */
+	clock_test_expected =
+		(uint32_t)(((uint64_t)counter_frequency * timer_period_ms) / 1000U);
 
-    /* Initialize the counter ticks variable before starting the clock test */
-    FS_CLK_Init(&counter_ticks);
+	/* Tolerance as an absolute tick count */
+	clock_test_tolerance =
+		(uint32_t)(((uint64_t)clock_test_expected * tolerance_percent) / 100U);
 
-    /* Start the reference counter */
-    counter_start(counter); 
+	counter_ticks_limit_high = clock_test_expected + clock_test_tolerance;
+	counter_ticks_limit_low  = clock_test_expected - clock_test_tolerance;
 
-    /* Start the periodic timer */
-    k_timer_start(&iec60730b_test_clock_timer, K_MSEC(timer_period_ms), K_MSEC(timer_period_ms));
+	LOG_DBG("Expected ticks=%u [%u %u]",
+		clock_test_expected,
+		counter_ticks_limit_low,
+		counter_ticks_limit_high);
 
-    return IEC60730B_TEST_OK;
+	/* Reset state */
+    FS_CLK_Init(&counter_ticks_elapsed);
+    clock_test_started = false;
+
+	/* Start the reference counter from zero */
+	ret = counter_start(counter);
+	if (ret != 0) {
+		LOG_ERR("counter_start() error: %d", ret);
+		return IEC60730B_TEST_ERROR;
+	}
+
+	/* Start the periodic measurement timer */
+	k_timer_start(&iec60730b_test_clock_timer,
+		          K_MSEC(timer_period_ms),
+		          K_MSEC(timer_period_ms));
+
+	return IEC60730B_TEST_OK;
 }
 
-/* Perform clock test for IEC 60730 Class B compliance */
+/*
+ * Perform clock test for IEC 60730 Class B compliance.
+ *
+ * Should be called periodically from the application after
+ * iec60730b_test_clock_init().
+ */
 int iec60730b_test_clock(void)
 {
 #if defined(CONFIG_COUNTER_MCUX_LPTMR) || defined(CONFIG_COUNTER_MCUX_GPT) || defined(CONFIG_COUNTER_MCUX_CTIMER)
-    if (clock_test_start == true) { /* condition is valid after the first timer interrupt */
-        //DM printk("counter_ticks=0x%x [0x%x 0x%x]\n", counter_ticks, counter_ticks_limit_low, counter_ticks_limit_high);
-        if (FS_CLK_Check(counter_ticks, counter_ticks_limit_low, counter_ticks_limit_high) == FS_FAIL_CLK) {
-            return IEC60730B_TEST_CLOCK_ERROR;
-        }
-    }
-    return IEC60730B_TEST_OK;
+	if (!clock_test_started) {
+		/* Wait for the first timer interrupt before evaluating */
+		return IEC60730B_TEST_OK;
+	}
+
+	uint32_t elapsed = counter_ticks_elapsed;
+
+	LOG_DBG("Elapsed ticks=%u [%u %u]",
+		elapsed,
+		counter_ticks_limit_low,
+		counter_ticks_limit_high);
+
+	if (FS_CLK_Check(counter_ticks_elapsed, counter_ticks_limit_low, counter_ticks_limit_high) == FS_FAIL_CLK) {
+		return IEC60730B_TEST_CLOCK_ERROR;
+	}
+
+	return IEC60730B_TEST_OK;
 #else
     return IEC60730B_TEST_NOT_SUPPORTED;
 #endif
 }
+
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
