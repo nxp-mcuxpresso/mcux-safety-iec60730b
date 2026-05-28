@@ -17,7 +17,7 @@ config APP_SAFETY_THREAD_STACK_SIZE
 
 config APP_SAFETY_THREAD_PRIORITY
 	int "Safety test thread priority"
-	default -16 
+	default -16
 	help
 	  Priority level for the safety test thread.
 	  Lower values indicate higher priority.

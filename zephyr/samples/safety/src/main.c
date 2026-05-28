@@ -24,7 +24,7 @@ LOG_MODULE_REGISTER(main, CONFIG_APP_MAIN_LOG_LEVEL);
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 /* Get button configuration from the devicetree sw0 alias. */
-#define SW0_NODE	DT_ALIAS(sw0)
+#define SW0_NODE DT_ALIAS(sw0)
 #if !DT_NODE_HAS_STATUS_OKAY(SW0_NODE)
 #error "Unsupported board: sw0 devicetree alias is not defined"
 #endif
@@ -37,7 +37,8 @@ static void button_pressed(const struct device *dev, struct gpio_callback *cb, u
 	LOG_INF("Button pressed.");
 }
 
-/* System initialization hook for GPIO initialization, to ensure that pins are initialized before safety runtime tests start */
+/* System initialization hook for GPIO initialization, to ensure that pins are initialized before
+ * safety runtime tests start */
 static int main_task_gpio_init(void)
 {
 	int ret;
@@ -58,13 +59,15 @@ static int main_task_gpio_init(void)
 	}
 	ret = gpio_pin_configure_dt(&button, GPIO_INPUT);
 	if (ret != 0) {
-		LOG_ERR("Error %d: failed to configure %s pin %d", ret, button.port->name, button.pin);
+		LOG_ERR("Error %d: failed to configure %s pin %d", ret, button.port->name,
+			button.pin);
 		return 0;
 	}
 
 	ret = gpio_pin_interrupt_configure_dt(&button, GPIO_INT_EDGE_TO_ACTIVE);
 	if (ret != 0) {
-		LOG_ERR("Error %d: failed to configure interrupt on %s pin %d", ret, button.port->name, button.pin);
+		LOG_ERR("Error %d: failed to configure interrupt on %s pin %d", ret,
+			button.port->name, button.pin);
 		return 0;
 	}
 

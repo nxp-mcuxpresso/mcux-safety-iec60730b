@@ -1,7 +1,7 @@
 /*
  * Copyright 2025-2026 NXP
  * SPDX-License-Identifier: Apache-2.0
- * 
+ *
  * This demo application invokes safety tests according to IEC 60730 Class B.
  * The safety tests are executed in two phases:
  * 1. Startup tests: Critical tests performed during system initialization.
@@ -20,8 +20,8 @@
 #include <zephyr/sys/reboot.h>
 
 /*******************************************************************************
-* Declarations
-******************************************************************************/
+ * Declarations
+ ******************************************************************************/
 static int safety_init(void);
 static void safety_thread(void *arg1, void *arg2, void *arg3);
 static void safety_error_handler(int error_code);
@@ -39,192 +39,189 @@ SYS_INIT(safety_init, APPLICATION /* POST_KERNEL */, CONFIG_KERNEL_INIT_PRIORITY
 
 /*
  * Safety thread stack and creation configuration.
- * 
+ *
  * When CONFIG_IEC60730B_TEST_STACK is enabled, creates a custom stack with guard zones
  * for stack overflow detection testing. The guard zones provide additional protection
  * by reserving memory before and after the actual thread stack.
- * 
+ *
  * When disabled, uses the standard Zephyr thread definition macro for simpler
  * thread creation without custom stack management.
  */
 #ifdef CONFIG_IEC60730B_TEST_STACK
-    static K_THREAD_STACK_DEFINE(safety_stack, (CONFIG_APP_SAFETY_THREAD_STACK_SIZE + 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE));
-    #define SAFETY_THREAD_STACK                 &safety_stack[CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE]
-    #define SAFETY_THREAD_STACK_SIZE            (sizeof(safety_stack) - 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE)
-    #define SAFETY_THREAD_STACK_WRITABLE_SIZE   (K_THREAD_STACK_SIZEOF(safety_stack) - 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE) /* Thread writable stack buffer size */
+static K_THREAD_STACK_DEFINE(safety_stack, (CONFIG_APP_SAFETY_THREAD_STACK_SIZE +
+					    2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE));
+#define SAFETY_THREAD_STACK &safety_stack[CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE]
+#define SAFETY_THREAD_STACK_SIZE                                                                   \
+	(sizeof(safety_stack) - 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE)
+#define SAFETY_THREAD_STACK_WRITABLE_SIZE                                                          \
+	(K_THREAD_STACK_SIZEOF(safety_stack) -                                                     \
+	 2 * CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE) /* Thread writable stack buffer size */
 
-    static struct k_thread safety_thread_data;
-    static void safety_thread_create(void)
-    {
-        k_tid_t thread_id;
+static struct k_thread safety_thread_data;
+static void safety_thread_create(void)
+{
+	k_tid_t thread_id;
 
-        thread_id = k_thread_create(&safety_thread_data,
-                                    SAFETY_THREAD_STACK,
-                                    SAFETY_THREAD_STACK_WRITABLE_SIZE,
-                                    safety_thread,
-                                    NULL, NULL, NULL,
-                                    CONFIG_APP_SAFETY_THREAD_PRIORITY, 0,
-                                    K_MSEC(CONFIG_APP_SAFETY_PERIOD_MS));
+	thread_id = k_thread_create(&safety_thread_data, SAFETY_THREAD_STACK,
+				    SAFETY_THREAD_STACK_WRITABLE_SIZE, safety_thread, NULL, NULL,
+				    NULL, CONFIG_APP_SAFETY_THREAD_PRIORITY, 0,
+				    K_MSEC(CONFIG_APP_SAFETY_PERIOD_MS));
 
-        if (thread_id == NULL) {
-            LOG_ERR("Failed to create safety thread");
-            safety_error_handler(IEC60730B_TEST_ERROR);
-        }
+	if (thread_id == NULL) {
+		LOG_ERR("Failed to create safety thread");
+		safety_error_handler(IEC60730B_TEST_ERROR);
+	}
 
-        k_thread_name_set(thread_id, "safety");
-    }
+	k_thread_name_set(thread_id, "safety");
+}
 #else
-    /* Safety test thread definition and automatic startup configuration. */
-    K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE,
-                    safety_thread, NULL, NULL, NULL,
-                    CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, CONFIG_APP_SAFETY_PERIOD_MS);
+/* Safety test thread definition and automatic startup configuration. */
+K_THREAD_DEFINE(safety, CONFIG_APP_SAFETY_THREAD_STACK_SIZE, safety_thread, NULL, NULL, NULL,
+		CONFIG_APP_SAFETY_THREAD_PRIORITY, 0, CONFIG_APP_SAFETY_PERIOD_MS);
 #endif /* CONFIG_IEC60730B_TEST_STACK */
 
 int safety_error_code; /* Global error code. */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
-    uint8_t safety_test_ram_buffer[CONFIG_APP_SAFETY_TEST_RAM_BUFFER_SIZE] __aligned(4);
-    uint8_t safety_test_ram_backup_buffer[CONFIG_APP_SAFETY_TEST_RAM_BACKUP_BUFFER_SIZE] __aligned(4);
+uint8_t safety_test_ram_buffer[CONFIG_APP_SAFETY_TEST_RAM_BUFFER_SIZE] __aligned(4);
+uint8_t safety_test_ram_backup_buffer[CONFIG_APP_SAFETY_TEST_RAM_BACKUP_BUFFER_SIZE] __aligned(4);
 #endif /* CONFIG_IEC60730B_TEST_RAM */
 
 #ifdef CONFIG_IEC60730B_TEST_FLASH
-    /* Flash test buffer 1024 bytes */
-    const uint32_t safety_test_flash_buffer[256] = {
-        0x00000001, 0x00000002, 0x00000003, 0x00000004, 0x00000005, 0x00000006, 0x00000007, 0x00000008,
-        0x00000009, 0x0000000A, 0x0000000B, 0x0000000C, 0x0000000D, 0x0000000E, 0x0000000F, 0x00000010,
-        0x00000011, 0x00000012, 0x00000013, 0x00000014, 0x00000015, 0x00000016, 0x00000017, 0x00000018,
-        0x00000019, 0x0000001A, 0x0000001B, 0x0000001C, 0x0000001D, 0x0000001E, 0x0000001F, 0x00000020,
-        0x00000021, 0x00000022, 0x00000023, 0x00000024, 0x00000025, 0x00000026, 0x00000027, 0x00000028,
-        0x00000029, 0x0000002A, 0x0000002B, 0x0000002C, 0x0000002D, 0x0000002E, 0x0000002F, 0x00000030,
-        0x00000031, 0x00000032, 0x00000033, 0x00000034, 0x00000035, 0x00000036, 0x00000037, 0x00000038,
-        0x00000039, 0x0000003A, 0x0000003B, 0x0000003C, 0x0000003D, 0x0000003E, 0x0000003F, 0x00000040,
-        0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
-        0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
-        0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
-        0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
-        0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
-        0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
-        0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
-        0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
-        0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010, 0x00000020, 0x00000040, 0x00000080,
-        0x00000100, 0x00000200, 0x00000400, 0x00000800, 0x00001000, 0x00002000, 0x00004000, 0x00008000,
-        0x00010000, 0x00020000, 0x00040000, 0x00080000, 0x00100000, 0x00200000, 0x00400000, 0x00800000,
-        0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000,
-        0x80000000, 0x40000000, 0x20000000, 0x10000000, 0x08000000, 0x04000000, 0x02000000, 0x01000000,
-        0x00800000, 0x00400000, 0x00200000, 0x00100000, 0x00080000, 0x00040000, 0x00020000, 0x00010000,
-        0x00008000, 0x00004000, 0x00002000, 0x00001000, 0x00000800, 0x00000400, 0x00000200, 0x00000100,
-        0x00000080, 0x00000040, 0x00000020, 0x00000010, 0x00000008, 0x00000004, 0x00000002, 0x00000001,
-        0x12345678, 0x9ABCDEF0, 0x13579BDF, 0x2468ACE0, 0xFEDCBA98, 0x76543210, 0x89ABCDEF, 0x01234567,
-        0x87654321, 0x0FEDCBA9, 0x13572468, 0xACE02468, 0x97531BDF, 0x86420ECA, 0x75319FDB, 0x64208EC9,
-        0x53107FD8, 0x42096EC7, 0x31085FD6, 0x20074EC5, 0x10963FD4, 0x09852EC3, 0x08741FD2, 0x07630EC1,
-        0x06521FD0, 0x05410ECF, 0x04309FDE, 0x03208ECD, 0x02107FDC, 0x01096ECB, 0x00985FDA, 0x00874EC9,
-        0x00763FD8, 0x00652EC7, 0x00541FD6, 0x00430EC5, 0x00329FD4, 0x00218EC3, 0x00107FD2, 0x00096EC1,
-        0x00085FD0, 0x00074ECF, 0x00063FDE, 0x00052ECD, 0x00041FDC, 0x00030ECB, 0x00029FDA, 0x00018EC9,
-        0x00007FD8, 0x00006EC7, 0x00005FD6, 0x00004EC5, 0x00003FD4, 0x00002EC3, 0x00001FD2, 0x00000EC1,
-        0x0000FD0F, 0x0000ECFE, 0x0000DFED, 0x0000CEDC, 0x0000BDCB, 0x0000ACBA, 0x00009BA9, 0x00008A98
-    };
+/* Flash test buffer 1024 bytes */
+const uint32_t safety_test_flash_buffer[256] = {
+	0x00000001, 0x00000002, 0x00000003, 0x00000004, 0x00000005, 0x00000006, 0x00000007,
+	0x00000008, 0x00000009, 0x0000000A, 0x0000000B, 0x0000000C, 0x0000000D, 0x0000000E,
+	0x0000000F, 0x00000010, 0x00000011, 0x00000012, 0x00000013, 0x00000014, 0x00000015,
+	0x00000016, 0x00000017, 0x00000018, 0x00000019, 0x0000001A, 0x0000001B, 0x0000001C,
+	0x0000001D, 0x0000001E, 0x0000001F, 0x00000020, 0x00000021, 0x00000022, 0x00000023,
+	0x00000024, 0x00000025, 0x00000026, 0x00000027, 0x00000028, 0x00000029, 0x0000002A,
+	0x0000002B, 0x0000002C, 0x0000002D, 0x0000002E, 0x0000002F, 0x00000030, 0x00000031,
+	0x00000032, 0x00000033, 0x00000034, 0x00000035, 0x00000036, 0x00000037, 0x00000038,
+	0x00000039, 0x0000003A, 0x0000003B, 0x0000003C, 0x0000003D, 0x0000003E, 0x0000003F,
+	0x00000040, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
+	0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA,
+	0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
+	0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA,
+	0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
+	0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA,
+	0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
+	0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA,
+	0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555, 0xAAAAAAAA, 0x55555555,
+	0xAAAAAAAA, 0x55555555, 0x00000001, 0x00000002, 0x00000004, 0x00000008, 0x00000010,
+	0x00000020, 0x00000040, 0x00000080, 0x00000100, 0x00000200, 0x00000400, 0x00000800,
+	0x00001000, 0x00002000, 0x00004000, 0x00008000, 0x00010000, 0x00020000, 0x00040000,
+	0x00080000, 0x00100000, 0x00200000, 0x00400000, 0x00800000, 0x01000000, 0x02000000,
+	0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000, 0x80000000, 0x80000000,
+	0x40000000, 0x20000000, 0x10000000, 0x08000000, 0x04000000, 0x02000000, 0x01000000,
+	0x00800000, 0x00400000, 0x00200000, 0x00100000, 0x00080000, 0x00040000, 0x00020000,
+	0x00010000, 0x00008000, 0x00004000, 0x00002000, 0x00001000, 0x00000800, 0x00000400,
+	0x00000200, 0x00000100, 0x00000080, 0x00000040, 0x00000020, 0x00000010, 0x00000008,
+	0x00000004, 0x00000002, 0x00000001, 0x12345678, 0x9ABCDEF0, 0x13579BDF, 0x2468ACE0,
+	0xFEDCBA98, 0x76543210, 0x89ABCDEF, 0x01234567, 0x87654321, 0x0FEDCBA9, 0x13572468,
+	0xACE02468, 0x97531BDF, 0x86420ECA, 0x75319FDB, 0x64208EC9, 0x53107FD8, 0x42096EC7,
+	0x31085FD6, 0x20074EC5, 0x10963FD4, 0x09852EC3, 0x08741FD2, 0x07630EC1, 0x06521FD0,
+	0x05410ECF, 0x04309FDE, 0x03208ECD, 0x02107FDC, 0x01096ECB, 0x00985FDA, 0x00874EC9,
+	0x00763FD8, 0x00652EC7, 0x00541FD6, 0x00430EC5, 0x00329FD4, 0x00218EC3, 0x00107FD2,
+	0x00096EC1, 0x00085FD0, 0x00074ECF, 0x00063FDE, 0x00052ECD, 0x00041FDC, 0x00030ECB,
+	0x00029FDA, 0x00018EC9, 0x00007FD8, 0x00006EC7, 0x00005FD6, 0x00004EC5, 0x00003FD4,
+	0x00002EC3, 0x00001FD2, 0x00000EC1, 0x0000FD0F, 0x0000ECFE, 0x0000DFED, 0x0000CEDC,
+	0x0000BDCB, 0x0000ACBA, 0x00009BA9, 0x00008A98};
 
-    /* Pre-calculated CRC values for the test buffer */
-    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
-    #define SAFETY_TEST_FLASH_BUFFER_CRC32 (0x228B7931)
-    #endif
-    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
-    #define SAFETY_TEST_FLASH_BUFFER_CRC16 (0x00F9)
-    #endif
+/* Pre-calculated CRC values for the test buffer */
+#ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
+#define SAFETY_TEST_FLASH_BUFFER_CRC32 (0x228B7931)
+#endif
+#ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
+#define SAFETY_TEST_FLASH_BUFFER_CRC16 (0x00F9)
+#endif
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_DIO
-    /* Use the sw0 button configured in main.c */
-    static const struct gpio_dt_spec test_gpio_input = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
-    /* Use the led0 configured in main.c */
-    static const struct gpio_dt_spec test_gpio_output = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
+/* Use the sw0 button configured in main.c */
+static const struct gpio_dt_spec test_gpio_input = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
+/* Use the led0 configured in main.c */
+static const struct gpio_dt_spec test_gpio_output = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 #endif /* CONFIG_IEC60730B_TEST_DIO */
 
 #if defined(CONFIG_IEC60730B_TEST_CLOCK) || defined(CONFIG_IEC60730B_TEST_WDOG)
-    /* Counter device for clock frequency testing */
-    static const struct device *test_reference_counter = DEVICE_DT_GET_OR_NULL(DT_ALIAS(test_counter));
+/* Counter device for clock frequency testing */
+static const struct device *test_reference_counter = DEVICE_DT_GET_OR_NULL(DT_ALIAS(test_counter));
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
 
 #ifdef CONFIG_IEC60730B_TEST_AIO
-    #if !DT_NODE_EXISTS(DT_PATH(zephyr_user)) || \
-    !DT_NODE_HAS_PROP(DT_PATH(zephyr_user), io_channels)
-        static const struct device *test_adc[] = {NULL, NULL, NULL};
-        static struct iec60730b_adc_channel channel[] = {{0},{0},{0}};
-        static void enable_bandgap(void)
-        {
-            /* Bandgap enabling not supported on this platform */
-        }
-    #else
-        static const struct adc_dt_spec adc_channels[] = {
-            /* Channel from DT connected to Low Voltage typically GND (0V) */
-            ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 0),
-            /* Channel from DT connected to High Voltage typically 3.3V */
-            ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 1),
-            /* Channel from DT connected to BandGap Voltage typically 1.65V */
-            ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 2),
-        };
-        static const struct device *test_adc[] =
-        {
-            adc_channels[0].dev,
-            adc_channels[1].dev,
-            adc_channels[2].dev
-        };
-        static struct iec60730b_adc_channel channel[] =
-        {
-            {
-                .channel_cfg = adc_channels[0].channel_cfg,
-                .vref_mv     = adc_channels[0].vref_mv,
-                .resolution  = adc_channels[0].resolution,
-                .allowed_deviation = 5U, /* allowed % of ADC max */
-            },
-            {
-                .channel_cfg = adc_channels[1].channel_cfg,
-                .vref_mv     = adc_channels[1].vref_mv,
-                .resolution  = adc_channels[1].resolution,
-                .allowed_deviation = 5U, /* allowed % of ADC max */
-            },
-            {
-                .channel_cfg = adc_channels[2].channel_cfg,
-                .vref_mv     = adc_channels[2].vref_mv,
-                .resolution  = adc_channels[2].resolution,
-                .allowed_deviation = 5U, /* allowed % of ADC max */
-            }
-        };
-        #if CONFIG_DT_HAS_NXP_SPC_ENABLED
-            /* 
-             * SDK driver for System-Power-Control needed for using bandgap control.
-             */
-            #include "fsl_spc.h"
-            /*
-             * Enable bandgap voltage reference needed for AIO Test,
-             * as one of the measured channel is internal bandgap voltage reference.
-             */
-            static void enable_bandgap(void)
-            {
-                /* Check if SPC instance is valid */
-                if (SPC0 != NULL) {
-                    /* Enable bandgap in active mode with buffer enabled - more stable voltage */
-                    SPC_SetActiveModeBandgapModeConfig(SPC0, kSPC_BandgapEnabledBufferEnabled);
-                }
-            }
-        #else
-            static void enable_bandgap(void)
-            {
-                /* Bandgap enabling not supported on this platform */
-            }
-        #endif /* CONFIG_DT_HAS_NXP_SPC_ENABLED */
-    #endif
+#if !DT_NODE_EXISTS(DT_PATH(zephyr_user)) || !DT_NODE_HAS_PROP(DT_PATH(zephyr_user), io_channels)
+static const struct device *test_adc[] = {NULL, NULL, NULL};
+static struct iec60730b_adc_channel channel[] = {{0}, {0}, {0}};
+static void enable_bandgap(void)
+{
+	/* Bandgap enabling not supported on this platform */
+}
+#else
+static const struct adc_dt_spec adc_channels[] = {
+	/* Channel from DT connected to Low Voltage typically GND (0V) */
+	ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 0),
+	/* Channel from DT connected to High Voltage typically 3.3V */
+	ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 1),
+	/* Channel from DT connected to BandGap Voltage typically 1.65V */
+	ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 2),
+};
+static const struct device *test_adc[] = {adc_channels[0].dev, adc_channels[1].dev,
+					  adc_channels[2].dev};
+static struct iec60730b_adc_channel channel[] = {
+	{
+		.channel_cfg = adc_channels[0].channel_cfg,
+		.vref_mv = adc_channels[0].vref_mv,
+		.resolution = adc_channels[0].resolution,
+		.allowed_deviation = 5U, /* allowed % of ADC max */
+	},
+	{
+		.channel_cfg = adc_channels[1].channel_cfg,
+		.vref_mv = adc_channels[1].vref_mv,
+		.resolution = adc_channels[1].resolution,
+		.allowed_deviation = 5U, /* allowed % of ADC max */
+	},
+	{
+		.channel_cfg = adc_channels[2].channel_cfg,
+		.vref_mv = adc_channels[2].vref_mv,
+		.resolution = adc_channels[2].resolution,
+		.allowed_deviation = 5U, /* allowed % of ADC max */
+	}};
+#if CONFIG_DT_HAS_NXP_SPC_ENABLED
+/*
+ * SDK driver for System-Power-Control needed for using bandgap control.
+ */
+#include "fsl_spc.h"
+/*
+ * Enable bandgap voltage reference needed for AIO Test,
+ * as one of the measured channel is internal bandgap voltage reference.
+ */
+static void enable_bandgap(void)
+{
+	/* Check if SPC instance is valid */
+	if (SPC0 != NULL) {
+		/* Enable bandgap in active mode with buffer enabled - more stable voltage */
+		SPC_SetActiveModeBandgapModeConfig(SPC0, kSPC_BandgapEnabledBufferEnabled);
+	}
+}
+#else
+static void enable_bandgap(void)
+{
+	/* Bandgap enabling not supported on this platform */
+}
+#endif /* CONFIG_DT_HAS_NXP_SPC_ENABLED */
+#endif
 #endif /* CONFIG_IEC60730B_TEST_AIO */
 
 #if CONFIG_IEC60730B_TEST_WDOG || CONFIG_APP_SAFETY_TASK_WATCHDOG
-    /* Watchdog device for watchdog testing */
-    static const struct device *const test_wdog = DEVICE_DT_GET_OR_NULL(DT_ALIAS(watchdog0));
+/* Watchdog device for watchdog testing */
+static const struct device *const test_wdog = DEVICE_DT_GET_OR_NULL(DT_ALIAS(watchdog0));
 #endif /* CONFIG_IEC60730B_TEST_WDOG || CONFIG_APP_SAFETY_TASK_WATCHDOG */
 
 /* Task watchdog */
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-    static void safety_task_wdt_callback(int channel_id, void *user_data);
-    static int safety_task_wdt_id = -1;
+static void safety_task_wdt_callback(int channel_id, void *user_data);
+static int safety_task_wdt_id = -1;
 #endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
 
 /*******************************************************************************
@@ -236,14 +233,14 @@ int safety_error_code; /* Global error code. */
  */
 static int safety_init(void)
 {
-    LOG_INF("Perform startup safety tests:");
-    safety_startup_tests();
+	LOG_INF("Perform startup safety tests:");
+	safety_startup_tests();
 
 #ifdef CONFIG_IEC60730B_TEST_STACK
-    safety_thread_create();
+	safety_thread_create();
 #endif
 
-    return 0;
+	return 0;
 }
 
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
@@ -252,27 +249,29 @@ static int safety_init(void)
  */
 static void safety_task_wdt_init(void)
 {
-    int result;
+	int result;
 
-    if (!device_is_ready(test_wdog)) {
-        LOG_WRN("Hardware watchdog not ready");
-        result = task_wdt_init(NULL);
-    } else {
-        result = task_wdt_init(test_wdog);
-    }
+	if (!device_is_ready(test_wdog)) {
+		LOG_WRN("Hardware watchdog not ready");
+		result = task_wdt_init(NULL);
+	} else {
+		result = task_wdt_init(test_wdog);
+	}
 
-    if (result != 0) {
-        LOG_ERR("task wdt init failure: %d\n", result);
-        safety_error_handler(IEC60730B_TEST_ERROR);
-    }
+	if (result != 0) {
+		LOG_ERR("task wdt init failure: %d\n", result);
+		safety_error_handler(IEC60730B_TEST_ERROR);
+	}
 
-    /* Add a new task watchdog channel with the safety callback function */
-    safety_task_wdt_id = task_wdt_add(CONFIG_APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS, safety_task_wdt_callback, NULL);
-    if (safety_task_wdt_id < 0) {
-        LOG_ERR("Failed to add task WDT channel");
-        safety_error_handler(IEC60730B_TEST_ERROR);
-    }
-    LOG_INF("Task WDT channel %d added with timeout %d ms", safety_task_wdt_id, CONFIG_APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS);
+	/* Add a new task watchdog channel with the safety callback function */
+	safety_task_wdt_id = task_wdt_add(CONFIG_APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS,
+					  safety_task_wdt_callback, NULL);
+	if (safety_task_wdt_id < 0) {
+		LOG_ERR("Failed to add task WDT channel");
+		safety_error_handler(IEC60730B_TEST_ERROR);
+	}
+	LOG_INF("Task WDT channel %d added with timeout %d ms", safety_task_wdt_id,
+		CONFIG_APP_SAFETY_TASK_WATCHDOG_TIMEOUT_MS);
 }
 
 /*
@@ -280,10 +279,10 @@ static void safety_task_wdt_init(void)
  */
 static void safety_task_wdt_callback(int channel_id, void *user_data)
 {
-    ARG_UNUSED(user_data);
-    LOG_WRN("Task watchdog channel %d timeout", channel_id);
+	ARG_UNUSED(user_data);
+	LOG_WRN("Task watchdog channel %d timeout", channel_id);
 
-    safety_error_handler(IEC60730B_TEST_WDT_ERROR);
+	safety_error_handler(IEC60730B_TEST_WDT_ERROR);
 }
 #endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
 
@@ -292,20 +291,20 @@ static void safety_task_wdt_callback(int channel_id, void *user_data)
  */
 static void safety_thread(void *arg1, void *arg2, void *arg3)
 {
-    ARG_UNUSED(arg1);
-    ARG_UNUSED(arg2);
-    ARG_UNUSED(arg3);
+	ARG_UNUSED(arg1);
+	ARG_UNUSED(arg2);
+	ARG_UNUSED(arg3);
 
-    LOG_INF("Safety test thread started");
+	LOG_INF("Safety test thread started");
 
-    /* Thread function runs indefinitely */
-    while (1) {
-        /* Perform runtime safety tests */
-        safety_rutime_tests();
+	/* Thread function runs indefinitely */
+	while (1) {
+		/* Perform runtime safety tests */
+		safety_rutime_tests();
 
-        /* Sleep before next iteration */
-        k_msleep(CONFIG_APP_SAFETY_PERIOD_MS);
-    }
+		/* Sleep before next iteration */
+		k_msleep(CONFIG_APP_SAFETY_PERIOD_MS);
+	}
 }
 
 /*
@@ -313,20 +312,20 @@ static void safety_thread(void *arg1, void *arg2, void *arg3)
  */
 static void safety_error_handler(int error_code)
 {
-    safety_error_code = error_code;
-    LOG_ERR("Safety error detected: %d", safety_error_code);
+	safety_error_code = error_code;
+	LOG_ERR("Safety error detected: %d", safety_error_code);
 
 #ifdef CONFIG_APP_SAFETY_ERROR_ACTION_INFINITE_LOOP
-    LOG_INF("Entering infinite loop");
-    (void)irq_lock(); /* Disable interrupts */
-    while (1){
+	LOG_INF("Entering infinite loop");
+	(void)irq_lock(); /* Disable interrupts */
+	while (1) {
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-        task_wdt_feed(safety_task_wdt_id);
+		task_wdt_feed(safety_task_wdt_id);
 #endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
-    }
+	}
 #elif defined(CONFIG_APP_SAFETY_ERROR_ACTION_RESET)
-    LOG_INF("Performing immediate cold reset");
-    sys_reboot(SYS_REBOOT_COLD);
+	LOG_INF("Performing immediate cold reset");
+	sys_reboot(SYS_REBOOT_COLD);
 #endif
 }
 
@@ -335,19 +334,18 @@ static void safety_error_handler(int error_code)
  */
 static void safety_test_result_handler(int result, const char *test_name)
 {
-    /*
-     * If failed, invoke the error handler. Otherwise, log the test result
-     * as either PASS or SKIP.
-     */
-    if (result < 0) { 
-        LOG_ERR("- FAIL - %s", test_name);
-        safety_error_handler(result);
-    } else if(result == IEC60730B_TEST_OK) {
-        LOG_INF("- PASS - %s", test_name);
-    }
-    else {
-        LOG_WRN("- SKIP - %s", test_name);
-    }
+	/*
+	 * If failed, invoke the error handler. Otherwise, log the test result
+	 * as either PASS or SKIP.
+	 */
+	if (result < 0) {
+		LOG_ERR("- FAIL - %s", test_name);
+		safety_error_handler(result);
+	} else if (result == IEC60730B_TEST_OK) {
+		LOG_INF("- PASS - %s", test_name);
+	} else {
+		LOG_WRN("- SKIP - %s", test_name);
+	}
 }
 
 /*******************************************************************************
@@ -362,110 +360,111 @@ static void safety_test_result_handler(int result, const char *test_name)
  */
 static void safety_startup_tests(void)
 {
-    int result;
+	int result;
 
-    LOG_INF("== Executing Start-up tests ==");
+	LOG_INF("== Executing Start-up tests ==");
 
 #ifdef CONFIG_IEC60730B_TEST_CPU
-    result = iec60730b_test_cpu();
-    safety_test_result_handler(result, "CPU Registers test");
+	result = iec60730b_test_cpu();
+	safety_test_result_handler(result, "CPU Registers test");
 #endif /* CONFIG_IEC60730B_TEST_CPU */
 
 #ifdef CONFIG_IEC60730B_TEST_FPU
-    result = iec60730b_test_fpu();
-    safety_test_result_handler(result, "FPU Registers test");
+	result = iec60730b_test_fpu();
+	safety_test_result_handler(result, "FPU Registers test");
 #endif /* CONFIG_IEC60730B_TEST_FPU */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
-    result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
-                                safety_test_ram_backup_buffer, sizeof(safety_test_ram_backup_buffer),
-                                IEC60730B_TEST_RAM_TYPE_MARCH_C);
-    safety_test_result_handler(result, "RAM test");
+	result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
+				    safety_test_ram_backup_buffer,
+				    sizeof(safety_test_ram_backup_buffer),
+				    IEC60730B_TEST_RAM_TYPE_MARCH_C);
+	safety_test_result_handler(result, "RAM test");
 #endif /* CONFIG_IEC60730B_TEST_RAM */
 
 #ifdef CONFIG_IEC60730B_TEST_PC
-    result = iec60730b_test_pc();
-    safety_test_result_handler(result, "PC test");
+	result = iec60730b_test_pc();
+	safety_test_result_handler(result, "PC test");
 #endif /* CONFIG_IEC60730B_TEST_PC */
 
 #ifdef CONFIG_IEC60730B_TEST_FLASH
-    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
-    result = iec60730b_test_flash_crc16(safety_test_flash_buffer,
-                                        sizeof(safety_test_flash_buffer),
-                                        SAFETY_TEST_FLASH_BUFFER_CRC16);
-    safety_test_result_handler(result, "Flash CRC16 test");
-    #endif /* CONFIG_IEC60730B_TEST_FLASH_CRC16 */
+#ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
+	result = iec60730b_test_flash_crc16(safety_test_flash_buffer,
+					    sizeof(safety_test_flash_buffer),
+					    SAFETY_TEST_FLASH_BUFFER_CRC16);
+	safety_test_result_handler(result, "Flash CRC16 test");
+#endif /* CONFIG_IEC60730B_TEST_FLASH_CRC16 */
 
-    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
-    result = iec60730b_test_flash_crc32(safety_test_flash_buffer,
-                                        sizeof(safety_test_flash_buffer),
-                                        SAFETY_TEST_FLASH_BUFFER_CRC32);
-    safety_test_result_handler(result, "Flash CRC32 test");
-    #endif /* CONFIG_IEC60730B_TEST_FLASH_CRC32 */
+#ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
+	result = iec60730b_test_flash_crc32(safety_test_flash_buffer,
+					    sizeof(safety_test_flash_buffer),
+					    SAFETY_TEST_FLASH_BUFFER_CRC32);
+	safety_test_result_handler(result, "Flash CRC32 test");
+#endif /* CONFIG_IEC60730B_TEST_FLASH_CRC32 */
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_WDOG
-    /* It must run before TEST_CLOCK and APP_SAFETY_TASK_WATCHDOG */
-    if(device_is_ready(test_wdog) && device_is_ready(test_reference_counter)){
-        result = iec60730b_test_wdog(test_wdog, 1000 /* ms */, test_reference_counter, 20 /* % */);
-        safety_test_result_handler(result, "Watchdog test");
-    }
+	/* It must run before TEST_CLOCK and APP_SAFETY_TASK_WATCHDOG */
+	if (device_is_ready(test_wdog) && device_is_ready(test_reference_counter)) {
+		result = iec60730b_test_wdog(test_wdog, 1000 /* ms */, test_reference_counter,
+					     20 /* % */);
+		safety_test_result_handler(result, "Watchdog test");
+	}
 #endif /* CONFIG_IEC60730B_TEST_WDOG */
 
 #ifdef CONFIG_IEC60730B_TEST_STACK
-    result = iec60730b_test_stack_init(SAFETY_THREAD_STACK,
-                                       SAFETY_THREAD_STACK_SIZE,
-                                       CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE,
-                                       CONFIG_APP_SAFETY_TEST_STACK_GUARD_PATTERN);
-    safety_test_result_handler(result, "Stack test initialization");
+	result = iec60730b_test_stack_init(SAFETY_THREAD_STACK, SAFETY_THREAD_STACK_SIZE,
+					   CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE,
+					   CONFIG_APP_SAFETY_TEST_STACK_GUARD_PATTERN);
+	safety_test_result_handler(result, "Stack test initialization");
 #endif /* CONFIG_IEC60730B_TEST_STACK */
 
 #ifdef CONFIG_IEC60730B_TEST_CLOCK
-    if(device_is_ready(test_reference_counter)) {
-        result = iec60730b_test_clock_init(test_reference_counter, 1000 /* ms */, 20 /* % */);
-        safety_test_result_handler(result, "Clock test initialization");
-    }
+	if (device_is_ready(test_reference_counter)) {
+		result = iec60730b_test_clock_init(test_reference_counter, 1000 /* ms */,
+						   20 /* % */);
+		safety_test_result_handler(result, "Clock test initialization");
+	}
 #endif /* CONFIG_IEC60730B_TEST_CLOCK */
 
 #ifdef CONFIG_IEC60730B_TEST_AIO
-    if(device_is_ready(test_adc[0])) {
-        /* Init ADC channel with expected voltage in mV */
-        result = iec60730b_aio_init_channel(test_adc[0], &channel[0], 0U);
-        safety_test_result_handler(result, "AIO init VL");
-        /* Measuring channel with VREFL signal voltage connected */
-        result = iec60730b_test_aio(test_adc[0], &channel[0]);
-        safety_test_result_handler(result, "AIO test VL");
-    }
+	if (device_is_ready(test_adc[0])) {
+		/* Init ADC channel with expected voltage in mV */
+		result = iec60730b_aio_init_channel(test_adc[0], &channel[0], 0U);
+		safety_test_result_handler(result, "AIO init VL");
+		/* Measuring channel with VREFL signal voltage connected */
+		result = iec60730b_test_aio(test_adc[0], &channel[0]);
+		safety_test_result_handler(result, "AIO test VL");
+	}
 
-    if(device_is_ready(test_adc[1])) {
-        /* Init ADC channel with expected voltage in mV */
-        result = iec60730b_aio_init_channel(test_adc[1], &channel[1], 825U);
-        safety_test_result_handler(result, "AIO init VH");
-        /* Measuring channel with VREFH/4 signal voltage connected */
-        /* If your device has a lower reference voltage, adjust the value accordingly */
-        result = iec60730b_test_aio(test_adc[1], &channel[1]);
-        safety_test_result_handler(result, "AIO test VH");
-    }
+	if (device_is_ready(test_adc[1])) {
+		/* Init ADC channel with expected voltage in mV */
+		result = iec60730b_aio_init_channel(test_adc[1], &channel[1], 825U);
+		safety_test_result_handler(result, "AIO init VH");
+		/* Measuring channel with VREFH/4 signal voltage connected */
+		/* If your device has a lower reference voltage, adjust the value accordingly */
+		result = iec60730b_test_aio(test_adc[1], &channel[1]);
+		safety_test_result_handler(result, "AIO test VH");
+	}
 
-    if(device_is_ready(test_adc[2])) {
-        /* Enable internal bandgap voltage reference for analog measurement,
-        * check datasheet for device specific bandgap voltage value */
-        enable_bandgap();
-        /* Init ADC channel with expected voltage in mV */
-        result = iec60730b_aio_init_channel(test_adc[2], &channel[2], 1000U);
-        safety_test_result_handler(result, "AIO init BG");
-        /* Measuring channel with BandGap signal voltage connected */
-        /* If your device has a lower reference voltage, adjust the value accordingly */
-        result = iec60730b_test_aio(test_adc[2], &channel[2]);
-        safety_test_result_handler(result, "AIO test BG");
-    }
+	if (device_is_ready(test_adc[2])) {
+		/* Enable internal bandgap voltage reference for analog measurement,
+		 * check datasheet for device specific bandgap voltage value */
+		enable_bandgap();
+		/* Init ADC channel with expected voltage in mV */
+		result = iec60730b_aio_init_channel(test_adc[2], &channel[2], 1000U);
+		safety_test_result_handler(result, "AIO init BG");
+		/* Measuring channel with BandGap signal voltage connected */
+		/* If your device has a lower reference voltage, adjust the value accordingly */
+		result = iec60730b_test_aio(test_adc[2], &channel[2]);
+		safety_test_result_handler(result, "AIO test BG");
+	}
 #endif /* CONFIG_IEC60730B_TEST_AIO */
 
 /* Task watchdog initialization for run-time safety test monitoring */
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-    safety_task_wdt_init();
+	safety_task_wdt_init();
 #endif /* CONFIG_APP_SAFETY_TASK_WATCHDOG */
-
 }
 
 /*
@@ -477,95 +476,95 @@ static void safety_startup_tests(void)
  */
 static void safety_rutime_tests(void)
 {
-    int result;
+	int result;
 
-    LOG_INF("== Executing Run-time tests ==");
+	LOG_INF("== Executing Run-time tests ==");
 
 #ifdef CONFIG_IEC60730B_TEST_CPU
-    result = iec60730b_test_cpu();
-    safety_test_result_handler(result, "CPU Registers test");
+	result = iec60730b_test_cpu();
+	safety_test_result_handler(result, "CPU Registers test");
 #endif /* CONFIG_IEC60730B_TEST_CPU */
 
 #ifdef CONFIG_IEC60730B_TEST_FPU
-    result = iec60730b_test_fpu();
-    safety_test_result_handler(result, "FPU Registers test");
+	result = iec60730b_test_fpu();
+	safety_test_result_handler(result, "FPU Registers test");
 #endif /* CONFIG_IEC60730B_TEST_FPU */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
-    result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
-                                safety_test_ram_backup_buffer, sizeof(safety_test_ram_backup_buffer),
-                                IEC60730B_TEST_RAM_TYPE_MARCH_X);
-    safety_test_result_handler(result, "RAM test");
+	result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
+				    safety_test_ram_backup_buffer,
+				    sizeof(safety_test_ram_backup_buffer),
+				    IEC60730B_TEST_RAM_TYPE_MARCH_X);
+	safety_test_result_handler(result, "RAM test");
 #endif /* CONFIG_IEC60730B_TEST_RAM */
 
 #ifdef CONFIG_IEC60730B_TEST_PC
-    result = iec60730b_test_pc();
-    safety_test_result_handler(result, "PC test");
+	result = iec60730b_test_pc();
+	safety_test_result_handler(result, "PC test");
 #endif /* CONFIG_IEC60730B_TEST_PC */
 
 #ifdef CONFIG_IEC60730B_TEST_STACK
-    result = iec60730b_test_stack(SAFETY_THREAD_STACK,
-                                  SAFETY_THREAD_STACK_SIZE,
-                                  CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE,
-                                  CONFIG_APP_SAFETY_TEST_STACK_GUARD_PATTERN);
-    safety_test_result_handler(result, "Stack test");
+	result = iec60730b_test_stack(SAFETY_THREAD_STACK, SAFETY_THREAD_STACK_SIZE,
+				      CONFIG_APP_SAFETY_TEST_STACK_GUARD_SIZE,
+				      CONFIG_APP_SAFETY_TEST_STACK_GUARD_PATTERN);
+	safety_test_result_handler(result, "Stack test");
 #endif /* CONFIG_IEC60730B_TEST_STACK */
 
 #ifdef CONFIG_IEC60730B_TEST_FLASH
-    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
-    result = iec60730b_test_flash_crc16(safety_test_flash_buffer,
-                                        sizeof(safety_test_flash_buffer),
-                                        SAFETY_TEST_FLASH_BUFFER_CRC16);
-    safety_test_result_handler(result, "Flash CRC16 test");
-    #endif /* CONFIG_IEC60730B_TEST_FLASH_CRC16 */
+#ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
+	result = iec60730b_test_flash_crc16(safety_test_flash_buffer,
+					    sizeof(safety_test_flash_buffer),
+					    SAFETY_TEST_FLASH_BUFFER_CRC16);
+	safety_test_result_handler(result, "Flash CRC16 test");
+#endif /* CONFIG_IEC60730B_TEST_FLASH_CRC16 */
 
-    #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
-    result = iec60730b_test_flash_crc32(safety_test_flash_buffer,
-                                        sizeof(safety_test_flash_buffer),
-                                        SAFETY_TEST_FLASH_BUFFER_CRC32);
-    safety_test_result_handler(result, "Flash CRC32 test");
-    #endif /* CONFIG_IEC60730B_TEST_FLASH_CRC32 */
+#ifdef CONFIG_IEC60730B_TEST_FLASH_CRC32
+	result = iec60730b_test_flash_crc32(safety_test_flash_buffer,
+					    sizeof(safety_test_flash_buffer),
+					    SAFETY_TEST_FLASH_BUFFER_CRC32);
+	safety_test_result_handler(result, "Flash CRC32 test");
+#endif /* CONFIG_IEC60730B_TEST_FLASH_CRC32 */
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_DIO
-    /* NOTE: Test is failed if the sw0 button pressed & hold*/
-    result = iec60730b_test_dio_input(test_gpio_input.port, test_gpio_input.pin, 1);
-    safety_test_result_handler(result, "DIO Input test");
+	/* NOTE: Test is failed if the sw0 button pressed & hold*/
+	result = iec60730b_test_dio_input(test_gpio_input.port, test_gpio_input.pin, 1);
+	safety_test_result_handler(result, "DIO Input test");
 
-    result = iec60730b_test_dio_output(test_gpio_output.port, test_gpio_output.pin);
-    safety_test_result_handler(result, "DIO Output test");
+	result = iec60730b_test_dio_output(test_gpio_output.port, test_gpio_output.pin);
+	safety_test_result_handler(result, "DIO Output test");
 #endif /* CONFIG_IEC60730B_TEST_DIO */
 
 #ifdef CONFIG_IEC60730B_TEST_CLOCK
-    if(device_is_ready(test_reference_counter)) {
-        result = iec60730b_test_clock();
-        safety_test_result_handler(result, "Clock test");
-    }
+	if (device_is_ready(test_reference_counter)) {
+		result = iec60730b_test_clock();
+		safety_test_result_handler(result, "Clock test");
+	}
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_AIO
-    if(device_is_ready(test_adc[0])) {
-        /* Measuring channel with VREFL signal voltage connected */
-        result = iec60730b_test_aio(test_adc[0], &channel[0]);
-        safety_test_result_handler(result, "AIO test VL");
-    }
+	if (device_is_ready(test_adc[0])) {
+		/* Measuring channel with VREFL signal voltage connected */
+		result = iec60730b_test_aio(test_adc[0], &channel[0]);
+		safety_test_result_handler(result, "AIO test VL");
+	}
 
-    if(device_is_ready(test_adc[1])) {
-        /* Measuring channel with VREFH/4 signal voltage connected */
-        /* If your device has a lower reference voltage, adjust the value accordingly */
-        result = iec60730b_test_aio(test_adc[1], &channel[1]);
-        safety_test_result_handler(result, "AIO test VH");
-    }
+	if (device_is_ready(test_adc[1])) {
+		/* Measuring channel with VREFH/4 signal voltage connected */
+		/* If your device has a lower reference voltage, adjust the value accordingly */
+		result = iec60730b_test_aio(test_adc[1], &channel[1]);
+		safety_test_result_handler(result, "AIO test VH");
+	}
 
-    if(device_is_ready(test_adc[2])) {
-        /* Measuring channel with BandGap signal voltage connected */
-        /* If your device has a lower reference voltage, adjust the value accordingly */
-        result = iec60730b_test_aio(test_adc[2], &channel[2]);
-        safety_test_result_handler(result, "AIO test BG");
-    }
+	if (device_is_ready(test_adc[2])) {
+		/* Measuring channel with BandGap signal voltage connected */
+		/* If your device has a lower reference voltage, adjust the value accordingly */
+		result = iec60730b_test_aio(test_adc[2], &channel[2]);
+		safety_test_result_handler(result, "AIO test BG");
+	}
 #endif /* CONFIG_IEC60730B_TEST_AIO */
 
 #ifdef CONFIG_APP_SAFETY_TASK_WATCHDOG
-    task_wdt_feed(safety_task_wdt_id);
+	task_wdt_feed(safety_task_wdt_id);
 #endif
 }

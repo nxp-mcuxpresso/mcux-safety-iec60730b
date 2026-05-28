@@ -17,38 +17,38 @@ static const uint32_t pattern2 = 0xAAAAAAAAU;
 
 /* Mask for the APSR register */
 #if !defined(CONFIG_ARMV7_M_ARMV8_M_MAINLINE)
-#define APSR_BITMASK		0xF0000000U
+#define APSR_BITMASK 0xF0000000U
 #elif defined(CONFIG_ARMV8_M_DSP)
-#define APSR_BITMASK		0xF80F0000U
+#define APSR_BITMASK 0xF80F0000U
 #else
-#define APSR_BITMASK		0xF8000000U
+#define APSR_BITMASK 0xF8000000U
 #endif
 
 /* Mask for the BASEPRI register */
-#define BASEPRI_BITMASK		((0xFFU << (8U - NUM_IRQ_PRIO_BITS)) & 0xFFU)
+#define BASEPRI_BITMASK ((0xFFU << (8U - NUM_IRQ_PRIO_BITS)) & 0xFFU)
 
 /* Mask for the PRIMASK register */
-#define PRIMASK_BITMASK		0x00000001U
+#define PRIMASK_BITMASK 0x00000001U
 
 /* Mask for the MSP (Main Stack Pointer) register. */
-#define MSP_BITMASK			0xFFFFFFFCU
+#define MSP_BITMASK 0xFFFFFFFCU
 
 /* Mask for the PSP (Process Stack Pointer) register */
-#define PSP_BITMASK			0xFFFFFFFCU
+#define PSP_BITMASK 0xFFFFFFFCU
 
 /* Mask for the MSPLIM (Main Stack Pointer Limit) register */
-#define MSPLIM_BITMASK		0xFFFFFFF8U
+#define MSPLIM_BITMASK 0xFFFFFFF8U
 
 /* Mask for the PSPLIM (Process Stack Pointer Limit) register */
-#define PSPLIM_BITMASK		0xFFFFFFF8U
+#define PSPLIM_BITMASK 0xFFFFFFF8U
 
 /* Mask for the CONTROL register */
 #if defined(CONFIG_ARM_TRUSTZONE_M) && defined(CONFIG_CPU_HAS_FPU)
-#define CONTROL_BITMASK		0x0000000EU		/* ARMv8-M with TrustZone and FPU */
+#define CONTROL_BITMASK 0x0000000EU /* ARMv8-M with TrustZone and FPU */
 #elif defined(CONFIG_CPU_HAS_FPU)
-#define CONTROL_BITMASK		0x00000006U		/* With FPU */
+#define CONTROL_BITMASK 0x00000006U /* With FPU */
 #else
-#define CONTROL_BITMASK		0x00000002U		/* Without FPU */
+#define CONTROL_BITMASK 0x00000002U /* Without FPU */
 #endif
 
 /*******************************************************************************
@@ -58,191 +58,191 @@ __STATIC_FORCEINLINE uint32_t __get_R0(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r0" : "=r" (result));
+	__ASM volatile("MOV %0, r0" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R0(uint32_t r0)
 {
-	__ASM volatile("MOV r0, %0" : : "r" (r0) : "r0");
+	__ASM volatile("MOV r0, %0" : : "r"(r0) : "r0");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R1(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r1" : "=r" (result));
+	__ASM volatile("MOV %0, r1" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R1(uint32_t r1)
 {
-	__ASM volatile("MOV r1, %0" : : "r" (r1) : "r1");
+	__ASM volatile("MOV r1, %0" : : "r"(r1) : "r1");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R2(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r2" : "=r" (result));
+	__ASM volatile("MOV %0, r2" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R2(uint32_t r2)
 {
-	__ASM volatile("MOV r2, %0" : : "r" (r2) : "r2");
+	__ASM volatile("MOV r2, %0" : : "r"(r2) : "r2");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R3(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r3" : "=r" (result));
+	__ASM volatile("MOV %0, r3" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R3(uint32_t r3)
 {
-	__ASM volatile("MOV r3, %0" : : "r" (r3) : "r3");
+	__ASM volatile("MOV r3, %0" : : "r"(r3) : "r3");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R4(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r4" : "=r" (result));
+	__ASM volatile("MOV %0, r4" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R4(uint32_t r4)
 {
-	__ASM volatile("MOV r4, %0" : : "r" (r4) : "r4");
+	__ASM volatile("MOV r4, %0" : : "r"(r4) : "r4");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R5(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r5" : "=r" (result));
+	__ASM volatile("MOV %0, r5" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R5(uint32_t r5)
 {
-	__ASM volatile("MOV r5, %0" : : "r" (r5) : "r5");
+	__ASM volatile("MOV r5, %0" : : "r"(r5) : "r5");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R6(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r6" : "=r" (result));
+	__ASM volatile("MOV %0, r6" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R6(uint32_t r6)
 {
-	__ASM volatile("MOV r6, %0" : : "r" (r6) : "r6");
+	__ASM volatile("MOV r6, %0" : : "r"(r6) : "r6");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R7(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r7" : "=r" (result));
+	__ASM volatile("MOV %0, r7" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R7(uint32_t r7)
 {
-	__ASM volatile("MOV r7, %0" : : "r" (r7) : "r7");
+	__ASM volatile("MOV r7, %0" : : "r"(r7) : "r7");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R8(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r8" : "=r" (result));
+	__ASM volatile("MOV %0, r8" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R8(uint32_t r8)
 {
-	__ASM volatile("MOV r8, %0" : : "r" (r8) : "r8");
+	__ASM volatile("MOV r8, %0" : : "r"(r8) : "r8");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R9(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r9" : "=r" (result));
+	__ASM volatile("MOV %0, r9" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R9(uint32_t r9)
 {
-	__ASM volatile("MOV r9, %0" : : "r" (r9) : "r9");
+	__ASM volatile("MOV r9, %0" : : "r"(r9) : "r9");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R10(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r10" : "=r" (result));
+	__ASM volatile("MOV %0, r10" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R10(uint32_t r10)
 {
-	__ASM volatile("MOV r10, %0" : : "r" (r10) : "r10");
+	__ASM volatile("MOV r10, %0" : : "r"(r10) : "r10");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R11(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r11" : "=r" (result));
+	__ASM volatile("MOV %0, r11" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R11(uint32_t r11)
 {
-	__ASM volatile("MOV r11, %0" : : "r" (r11) : "r11");
+	__ASM volatile("MOV r11, %0" : : "r"(r11) : "r11");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_R12(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, r12" : "=r" (result));
+	__ASM volatile("MOV %0, r12" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_R12(uint32_t r12)
 {
-	__ASM volatile("MOV r12, %0" : : "r" (r12) : "r12");
+	__ASM volatile("MOV r12, %0" : : "r"(r12) : "r12");
 }
 
 __STATIC_FORCEINLINE uint32_t __get_LR(void)
 {
 	uint32_t result;
 
-	__ASM volatile("MOV %0, lr" : "=r" (result));
+	__ASM volatile("MOV %0, lr" : "=r"(result));
 	return result;
 }
 
 __STATIC_FORCEINLINE void __set_LR(uint32_t lr)
 {
-	__ASM volatile("MOV lr, %0" : : "r" (lr) : "lr");
+	__ASM volatile("MOV lr, %0" : : "r"(lr) : "lr");
 }
 
 /* Set the APSR (Application Program Status Register). */
 __STATIC_FORCEINLINE void __set_APSR(uint32_t apsr)
 {
-#if defined(CONFIG_ARMV8_M_DSP)	/* With DSP */
-	__ASM volatile("MSR APSR_nzcvqg, %0" : : "r" (apsr) : "cc", "memory");
-#else				/* Without DSP */
-	__ASM volatile("MSR APSR_nzcvq, %0" : : "r" (apsr) : "cc", "memory");
+#if defined(CONFIG_ARMV8_M_DSP) /* With DSP */
+	__ASM volatile("MSR APSR_nzcvqg, %0" : : "r"(apsr) : "cc", "memory");
+#else /* Without DSP */
+	__ASM volatile("MSR APSR_nzcvq, %0" : : "r"(apsr) : "cc", "memory");
 #endif
 }
 

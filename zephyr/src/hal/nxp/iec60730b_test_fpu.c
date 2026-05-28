@@ -15,29 +15,29 @@ int iec60730b_test_fpu(void)
 {
 #if defined(CONFIG_CPU_CORTEX_M4) || defined(CONFIG_CPU_CORTEX_M7)
 
-    /* group 1 of FPU registers */
-    if (FS_CM4_CM7_CPU_Float1() == FS_FAIL_CPU_FLOAT_1){
-        return IEC60730B_TEST_FPU_ERROR;
-    }
-    /* group 2 of FPU registers */
-    if (FS_CM4_CM7_CPU_Float2() == FS_FAIL_CPU_FLOAT_2){
-        return IEC60730B_TEST_FPU_ERROR;
-    }
+	/* group 1 of FPU registers */
+	if (FS_CM4_CM7_CPU_Float1() == FS_FAIL_CPU_FLOAT_1) {
+		return IEC60730B_TEST_FPU_ERROR;
+	}
+	/* group 2 of FPU registers */
+	if (FS_CM4_CM7_CPU_Float2() == FS_FAIL_CPU_FLOAT_2) {
+		return IEC60730B_TEST_FPU_ERROR;
+	}
 
 #elif defined(CONFIG_CPU_CORTEX_M33)
 
-    if (FS_CM33_CPU_Float1() == FS_FAIL_CPU_FLOAT_1){
-        return IEC60730B_TEST_FPU_ERROR;
-    }
+	if (FS_CM33_CPU_Float1() == FS_FAIL_CPU_FLOAT_1) {
+		return IEC60730B_TEST_FPU_ERROR;
+	}
 
-    if (FS_CM33_CPU_Float2() == FS_FAIL_CPU_FLOAT_2){
-        return IEC60730B_TEST_FPU_ERROR;
-    }
+	if (FS_CM33_CPU_Float2() == FS_FAIL_CPU_FLOAT_2) {
+		return IEC60730B_TEST_FPU_ERROR;
+	}
 
 #else
-    return IEC60730B_TEST_NOT_SUPPORTED;
+	return IEC60730B_TEST_NOT_SUPPORTED;
 #endif
 
-    return IEC60730B_TEST_OK;
+	return IEC60730B_TEST_OK;
 }
 #endif /* CONFIG_IEC60730B_TEST_FPU */

@@ -70,10 +70,8 @@ int iec60730b_test_wdog(const struct device *wdog, uint32_t wdog_timeout_ms,
 			counter_ticks_limit_high = clock_test_expected + clock_test_tolerance;
 			counter_ticks_limit_low = clock_test_expected - clock_test_tolerance;
 
-			LOG_DBG("Counter ticks=%u [%u %u]",
-				iec60730b_test_wdog_counter_ticks,
-				counter_ticks_limit_low,
-				counter_ticks_limit_high);
+			LOG_DBG("Counter ticks=%u [%u %u]", iec60730b_test_wdog_counter_ticks,
+				counter_ticks_limit_low, counter_ticks_limit_high);
 			/* Check if the counter ticks are within the acceptable
 			 * range. If the counter ticks exceed the high limit or
 			 * fall below the low limit, the watchdog test has failed.
@@ -115,12 +113,10 @@ int iec60730b_test_wdog(const struct device *wdog, uint32_t wdog_timeout_ms,
 
 			LOG_DBG("Waiting for reset...");
 			while (1) {
-				ret = counter_get_value(
-					counter,
-					&iec60730b_test_wdog_counter_ticks);
+				ret = counter_get_value(counter,
+							&iec60730b_test_wdog_counter_ticks);
 				if (ret < 0) {
-					LOG_ERR("Counter get value error: %d",
-						ret);
+					LOG_ERR("Counter get value error: %d", ret);
 					return IEC60730B_TEST_WDT_ERROR;
 				}
 			}

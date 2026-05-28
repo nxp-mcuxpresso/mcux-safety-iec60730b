@@ -8,11 +8,11 @@
 #ifdef CONFIG_IEC60730B_TEST_FLASH
 
 /* Polynomial = x16 + x12 + x5 + 1 */
-#define CRC16_POLYNOMIAL    0x1021U
+#define CRC16_POLYNOMIAL 0x1021U
 /* Polynomial = x32 + x26 + x23 + x22 + x16 + x12 + x11 + x10 + x8 + x7 +
  *              x5 + x4 + x2 + x + 1
  */
-#define CRC32_POLYNOMIAL    0x04C11DB7U
+#define CRC32_POLYNOMIAL 0x04C11DB7U
 
 #ifdef CONFIG_IEC60730B_TEST_FLASH_CRC16
 /*

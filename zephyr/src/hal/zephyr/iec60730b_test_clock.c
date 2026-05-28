@@ -66,8 +66,7 @@ static void iec60730b_test_clock_timer_handler(struct k_timer *timer)
 }
 
 /* Periodic timer that drives the clock test measurements */
-static K_TIMER_DEFINE(iec60730b_test_clock_timer,
-		      iec60730b_test_clock_timer_handler, NULL);
+static K_TIMER_DEFINE(iec60730b_test_clock_timer, iec60730b_test_clock_timer_handler, NULL);
 
 /*
  * Initialize clock test for IEC 60730 Class B compliance.
@@ -75,8 +74,7 @@ static K_TIMER_DEFINE(iec60730b_test_clock_timer,
  * Configures the reference counter, computes the expected tick window, and
  * starts both the counter and the periodic measurement timer.
  */
-int iec60730b_test_clock_init(const struct device *counter,
-			      uint32_t timer_period_ms,
+int iec60730b_test_clock_init(const struct device *counter, uint32_t timer_period_ms,
 			      uint32_t tolerance_percent)
 {
 	uint32_t counter_frequency;
@@ -100,24 +98,21 @@ int iec60730b_test_clock_init(const struct device *counter,
 	}
 
 	/* Expected counter ticks during one timer period */
-	clock_test_expected =
-		(uint32_t)(((uint64_t)counter_frequency * timer_period_ms) / 1000U);
+	clock_test_expected = (uint32_t)(((uint64_t)counter_frequency * timer_period_ms) / 1000U);
 
 	/* Tolerance as an absolute tick count */
 	clock_test_tolerance =
 		(uint32_t)(((uint64_t)clock_test_expected * tolerance_percent) / 100U);
 
 	counter_ticks_limit_high = clock_test_expected + clock_test_tolerance;
-	counter_ticks_limit_low  = clock_test_expected - clock_test_tolerance;
+	counter_ticks_limit_low = clock_test_expected - clock_test_tolerance;
 
-	LOG_DBG("Expected ticks=%u [%u %u]",
-		clock_test_expected,
-		counter_ticks_limit_low,
+	LOG_DBG("Expected ticks=%u [%u %u]", clock_test_expected, counter_ticks_limit_low,
 		counter_ticks_limit_high);
 
 	/* Reset state */
 	counter_ticks_elapsed = 0U;
-	clock_test_started    = false;
+	clock_test_started = false;
 
 	/* Start the reference counter from zero */
 	ret = counter_start(counter);
@@ -127,8 +122,7 @@ int iec60730b_test_clock_init(const struct device *counter,
 	}
 
 	/* Start the periodic measurement timer */
-	k_timer_start(&iec60730b_test_clock_timer,
-		      K_MSEC(timer_period_ms),
+	k_timer_start(&iec60730b_test_clock_timer, K_MSEC(timer_period_ms),
 		      K_MSEC(timer_period_ms));
 
 	return IEC60730B_TEST_OK;
@@ -149,13 +143,10 @@ int iec60730b_test_clock(void)
 
 	uint32_t elapsed = counter_ticks_elapsed;
 
-	LOG_DBG("Elapsed ticks=%u [%u %u]",
-		elapsed,
-		counter_ticks_limit_low,
+	LOG_DBG("Elapsed ticks=%u [%u %u]", elapsed, counter_ticks_limit_low,
 		counter_ticks_limit_high);
 
-	if ((elapsed < counter_ticks_limit_low) ||
-	    (elapsed > counter_ticks_limit_high)) {
+	if ((elapsed < counter_ticks_limit_low) || (elapsed > counter_ticks_limit_high)) {
 		return IEC60730B_TEST_CLOCK_ERROR;
 	}
 

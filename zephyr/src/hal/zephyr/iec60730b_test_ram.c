@@ -25,14 +25,14 @@ static int iec60730b_test_ram_march_c(uint8_t *start_address, size_t block_size)
 	end_address = start_address + block_size;
 
 	/* March C - Step 1: Write 0x55 to all locations (ascending) */
-	for (addr = (volatile uint8_t *)start_address;
-	     addr < (volatile uint8_t *)end_address; addr++) {
+	for (addr = (volatile uint8_t *)start_address; addr < (volatile uint8_t *)end_address;
+	     addr++) {
 		*addr = PATTERN_55;
 	}
 
 	/* March C - Step 2: Read 0x55 and write 0xAA (ascending) */
-	for (addr = (volatile uint8_t *)start_address;
-	     addr < (volatile uint8_t *)end_address; addr++) {
+	for (addr = (volatile uint8_t *)start_address; addr < (volatile uint8_t *)end_address;
+	     addr++) {
 		read_value = *addr;
 		if (read_value != PATTERN_55) {
 			return IEC60730B_TEST_RAM_ERROR;
@@ -41,8 +41,8 @@ static int iec60730b_test_ram_march_c(uint8_t *start_address, size_t block_size)
 	}
 
 	/* March C - Step 3: Read 0xAA and write 0x55 (ascending) */
-	for (addr = (volatile uint8_t *)start_address;
-	     addr < (volatile uint8_t *)end_address; addr++) {
+	for (addr = (volatile uint8_t *)start_address; addr < (volatile uint8_t *)end_address;
+	     addr++) {
 		read_value = *addr;
 		if (read_value != PATTERN_AA) {
 			return IEC60730B_TEST_RAM_ERROR;
@@ -92,14 +92,14 @@ static int iec60730b_test_ram_march_x(uint8_t *start_address, size_t block_size)
 	end_address = start_address + block_size;
 
 	/* March X - Step 1: Write 0x55 to all locations (ascending) */
-	for (addr = (volatile uint8_t *)start_address;
-	     addr < (volatile uint8_t *)end_address; addr++) {
+	for (addr = (volatile uint8_t *)start_address; addr < (volatile uint8_t *)end_address;
+	     addr++) {
 		*addr = PATTERN_55;
 	}
 
 	/* March X - Step 2: Read 0x55 and write 0xAA (ascending) */
-	for (addr = (volatile uint8_t *)start_address;
-	     addr < (volatile uint8_t *)end_address; addr++) {
+	for (addr = (volatile uint8_t *)start_address; addr < (volatile uint8_t *)end_address;
+	     addr++) {
 		read_value = *addr;
 		if (read_value != PATTERN_55) {
 			return IEC60730B_TEST_RAM_ERROR;
@@ -130,8 +130,8 @@ static int iec60730b_test_ram_march_x(uint8_t *start_address, size_t block_size)
 }
 
 /* Test RAM memory using specified algorithm for IEC 60730 Class B compliance. */
-int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup,
-		       size_t backup_size, iec60730b_test_ram_type_t type)
+int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t backup_size,
+		       iec60730b_test_ram_type_t type)
 {
 	int result;
 	size_t remaining_size;

@@ -11,8 +11,8 @@
  * Initialize stack testing for IEC 60730 Class B compliance
  * Fills guard areas before and after the stack with a guard pattern
  */
-int iec60730b_test_stack_init(void *stack_start, size_t stack_size,
-			      size_t guard_size, uint32_t guard_pattern)
+int iec60730b_test_stack_init(void *stack_start, size_t stack_size, size_t guard_size,
+			      uint32_t guard_pattern)
 {
 	uint32_t num_words = guard_size / sizeof(uint32_t);
 	uint32_t *first_address = (uint32_t *)((uint8_t *)stack_start - sizeof(guard_pattern));
@@ -35,8 +35,8 @@ int iec60730b_test_stack_init(void *stack_start, size_t stack_size,
  * Test stack integrity for IEC 60730 Class B compliance
  * Verifies that guard areas before and after the stack contain the expected pattern
  */
-int iec60730b_test_stack(void *stack_start, size_t stack_size,
-			 size_t guard_size, uint32_t guard_pattern)
+int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size,
+			 uint32_t guard_pattern)
 {
 	uint32_t num_words = guard_size / sizeof(uint32_t);
 	uint32_t *first_address = (uint32_t *)((uint8_t *)stack_start - sizeof(guard_pattern));
