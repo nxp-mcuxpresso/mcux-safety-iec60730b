@@ -20,8 +20,14 @@ __weak int iec60730b_test_fpu(void)
 #endif /* CONFIG_IEC60730B_TEST_FPU */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
-__weak int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t backup_size,
-			      iec60730b_test_ram_type_t type)
+__weak int iec60730b_test_ram_march_c(uint8_t *ram, size_t ram_size, uint8_t *backup,
+				      size_t backup_size)
+{
+	return IEC60730B_TEST_NOT_SUPPORTED;
+}
+
+__weak int iec60730b_test_ram_march_x(uint8_t *ram, size_t ram_size, uint8_t *backup,
+				      size_t backup_size)
 {
 	return IEC60730B_TEST_NOT_SUPPORTED;
 }

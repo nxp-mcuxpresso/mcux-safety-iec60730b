@@ -33,50 +33,6 @@
 #define IEC60730B_TEST_AIO_ERROR     (-11) /* Analog Input/Output test fault */
 
 /*!
- * @brief RAM test algorithm types for IEC 60730 Class B compliance
- *
- * @kconfig_dep{CONFIG_IEC60730B_TEST_RAM}
- *
- * This enumeration defines the available RAM test algorithms that can be
- * used to detect memory faults as required by IEC 60730 Class B safety
- * standards.
- */
-typedef enum {
-	IEC60730B_TEST_RAM_TYPE_NONE = 0, /*!< No RAM test algorithm */
-	/**
-	 * March-C algorithm for RAM testing
-	 *
-	 * Complexity: O(10n) - 10 operations per memory cell
-	 *
-	 * Fault coverage:
-	 * - Stuck-at faults (SAF): Detects bits permanently stuck at 0 or 1
-	 * - Address decoder faults (AF): Detects incorrect address decoding
-	 * - Transition faults (TF): Detects failures when changing bit values
-	 * - Coupling faults (CF): Detects when one bit affects another
-	 * - Bridging faults (BF): Detects short circuits between memory lines
-	 *
-	 * Recommended for IEC 60730 Class B due to comprehensive fault coverage
-	 */
-	IEC60730B_TEST_RAM_TYPE_MARCH_C,
-	/**
-	 * March-X algorithm for RAM testing
-	 *
-	 * Complexity: O(6n) - 6 operations per memory cell
-	 *
-	 * Fault coverage:
-	 * - Stuck-at faults (SAF): Detects bits permanently stuck at 0 or 1
-	 * - Address decoder faults (AF): Detects incorrect address decoding
-	 * - Transition faults (TF): Detects failures when changing bit values
-	 * - Limited coupling faults (CF): Basic coupling fault detection
-	 *
-	 * Faster execution than March-C but with reduced fault coverage.
-	 * Suitable when execution time is critical and basic fault detection
-	 * is sufficient for the safety requirements.
-	 */
-	IEC60730B_TEST_RAM_TYPE_MARCH_X
-} iec60730b_test_ram_type_t;
-
-/*!
  * @brief ADC channel limits structure for allowed ADC result
  * used in Analog test for IEC 60730 Class B compliance
  *
@@ -162,24 +118,53 @@ int iec60730b_test_cpu(void);
 int iec60730b_test_fpu(void);
 
 /*!
- * @brief Test RAM memory for IEC 60730 Class B compliance
+ * @brief Test RAM memory using March C algorithm for IEC 60730 Class B compliance
  *
  * @kconfig_dep{CONFIG_IEC60730B_TEST_RAM}
  *
- * This function performs comprehensive RAM testing using the specified algorithm
- * to detect memory faults such as stuck-at bits, coupling faults, and addressing
- * faults as required by IEC 60730 Class B.
+ * Tests RAM memory using March C algorithm.
+ * Fault coverage:
+ * - Stuck-at faults (SAF): Detects bits permanently stuck at 0 or 1
+ * - Address decoder faults (AF): Detects incorrect address decoding
+ * - Transition faults (TF): Detects failures when changing bit values
+ * - Coupling faults (CF): Detects when one bit affects another
+ * - Bridging faults (BF): Detects short circuits between memory lines
  *
  * @param ram Pointer to the RAM memory area to be tested
  * @param ram_size Size of the RAM memory area in bytes
  * @param backup Pointer to backup memory area for data preservation
  * @param backup_size Size of the backup memory area in bytes
- * @param type RAM test algorithm type to be used
  *
  * @return 0 on success, negative on failure
  */
-int iec60730b_test_ram(uint8_t *ram, size_t ram_size, uint8_t *backup, size_t backup_size,
-		       iec60730b_test_ram_type_t type);
+int iec60730b_test_ram_march_c(uint8_t *ram, size_t ram_size, uint8_t *backup,
+                               size_t backup_size);
+
+/*!
+ * @brief Test RAM memory using March X algorithm for IEC 60730 Class B compliance
+ *
+ * @kconfig_dep{CONFIG_IEC60730B_TEST_RAM}
+ *
+ * Tests RAM memory using March X algorithm.
+ * Fault coverage:
+ * - Stuck-at faults (SAF): Detects bits permanently stuck at 0 or 1
+ * - Address decoder faults (AF): Detects incorrect address decoding
+ * - Transition faults (TF): Detects failures when changing bit values
+ * - Limited coupling faults (CF): Basic coupling fault detection
+ *
+ * Faster execution than March-C but with reduced fault coverage.
+ * Suitable when execution time is critical and basic fault detection
+ * is sufficient for the safety requirements
+ *
+ * @param ram Pointer to the RAM memory area to be tested
+ * @param ram_size Size of the RAM memory area in bytes
+ * @param backup Pointer to backup memory area for data preservation
+ * @param backup_size Size of the backup memory area in bytes
+ *
+ * @return 0 on success, negative on failure
+ */
+int iec60730b_test_ram_march_x(uint8_t *ram, size_t ram_size, uint8_t *backup,
+                               size_t backup_size);
 
 /*!
  * @brief Test Program Counter for IEC 60730 Class B compliance

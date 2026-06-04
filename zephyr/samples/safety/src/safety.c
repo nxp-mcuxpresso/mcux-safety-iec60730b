@@ -375,11 +375,10 @@ static void safety_startup_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_FPU */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
-	result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
-				    safety_test_ram_backup_buffer,
-				    sizeof(safety_test_ram_backup_buffer),
-				    IEC60730B_TEST_RAM_TYPE_MARCH_C);
-	safety_test_result_handler(result, "RAM test");
+	result = iec60730b_test_ram_march_c(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
+				       safety_test_ram_backup_buffer,
+				       sizeof(safety_test_ram_backup_buffer));
+	safety_test_result_handler(result, "RAM MARCH C test");
 #endif /* CONFIG_IEC60730B_TEST_RAM */
 
 #ifdef CONFIG_IEC60730B_TEST_PC
@@ -491,11 +490,10 @@ static void safety_rutime_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_FPU */
 
 #ifdef CONFIG_IEC60730B_TEST_RAM
-	result = iec60730b_test_ram(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
-				    safety_test_ram_backup_buffer,
-				    sizeof(safety_test_ram_backup_buffer),
-				    IEC60730B_TEST_RAM_TYPE_MARCH_X);
-	safety_test_result_handler(result, "RAM test");
+	result = iec60730b_test_ram_march_x(safety_test_ram_buffer, sizeof(safety_test_ram_buffer),
+				       safety_test_ram_backup_buffer,
+				       sizeof(safety_test_ram_backup_buffer));
+	safety_test_result_handler(result, "RAM MARCH X test");
 #endif /* CONFIG_IEC60730B_TEST_RAM */
 
 #ifdef CONFIG_IEC60730B_TEST_PC
