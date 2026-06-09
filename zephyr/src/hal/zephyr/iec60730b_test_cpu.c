@@ -452,7 +452,7 @@ static inline int iec60730b_test_cpu_cortex_primask(void)
 	return IEC60730B_TEST_OK;
 }
 
-#if CONFIG_ARM_TRUSTZONE_M
+#if CONFIG_ARM_SECURE_FIRMWARE
 /* Test PRIMASK register (Non-Secure) */
 static inline int iec60730b_test_cpu_cortex_primask_ns(void)
 {
@@ -477,7 +477,7 @@ static inline int iec60730b_test_cpu_cortex_primask_ns(void)
 
 	return IEC60730B_TEST_OK;
 }
-#endif /* CONFIG_ARM_TRUSTZONE_M */
+#endif /* CONFIG_ARM_SECURE_FIRMWARE */
 
 /* Test Main Stack Pointer */
 static inline int iec60730b_test_cpu_cortex_msp(void)
@@ -509,7 +509,7 @@ error_sp_main_s:
 	}
 }
 
-#if CONFIG_ARM_TRUSTZONE_M
+#if CONFIG_ARM_SECURE_FIRMWARE
 /* Test Main Stack Pointer (Non-Secure) */
 static inline int iec60730b_test_cpu_cortex_msp_ns(void)
 {
@@ -539,7 +539,7 @@ error_sp_main_ns:
 		;
 	}
 }
-#endif /* CONFIG_ARM_TRUSTZONE_M */
+#endif /* CONFIG_ARM_SECURE_FIRMWARE */
 
 #if defined(CONFIG_ARMV8_M_MAINLINE)
 /* Test Main Stack Pointer Limit */
@@ -573,7 +573,7 @@ error_sp_main_limit_s:
 }
 #endif /* CONFIG_ARMV8_M_MAINLINE */
 
-#if CONFIG_ARM_TRUSTZONE_M
+#if CONFIG_ARM_SECURE_FIRMWARE
 /* Test Main Stack Pointer Limit (Non-Secure) */
 static inline int iec60730b_test_cpu_cortex_msplim_ns(void)
 {
@@ -603,7 +603,7 @@ error_sp_main_limit_ns:
 		;
 	}
 }
-#endif /* CONFIG_ARM_TRUSTZONE_M */
+#endif /* CONFIG_ARM_SECURE_FIRMWARE */
 
 /* Test Process Stack Pointer */
 static inline int iec60730b_test_cpu_cortex_psp(void)
@@ -635,7 +635,7 @@ error_sp_process_s:
 	}
 }
 
-#if CONFIG_ARM_TRUSTZONE_M
+#if CONFIG_ARM_SECURE_FIRMWARE
 /* Test Process Stack Pointer (Non-Secure) */
 static inline int iec60730b_test_cpu_cortex_psp_ns(void)
 {
@@ -665,7 +665,7 @@ error_sp_process_ns:
 		;
 	}
 }
-#endif /* CONFIG_ARM_TRUSTZONE_M */
+#endif /* CONFIG_ARM_SECURE_FIRMWARE */
 
 #if defined(CONFIG_ARMV8_M_MAINLINE)
 /* Test Process Stack Pointer Limit */
@@ -699,7 +699,7 @@ error_sp_process_limit_s:
 }
 #endif /* CONFIG_ARMV8_M_MAINLINE */
 
-#ifdef CONFIG_ARM_TRUSTZONE_M
+#if CONFIG_ARM_SECURE_FIRMWARE
 /* Test Process Stack Pointer Limit (Non-Secure) */
 static inline int iec60730b_test_cpu_cortex_psplim_ns(void)
 {
@@ -729,7 +729,7 @@ error_sp_process_limit_ns:
 		;
 	}
 }
-#endif /* CONFIG_ARM_TRUSTZONE_M */
+#endif /* CONFIG_ARM_SECURE_FIRMWARE */
 
 /* Test CONTROL register */
 static inline int iec60730b_test_cpu_cortex_control(void)
@@ -812,7 +812,7 @@ static inline int iec60730b_test_cpu_cortex_special(void)
 }
 #endif /* CONFIG_ARMV7_M_ARMV8_M_MAINLINE */
 
-#if CONFIG_ARM_TRUSTZONE_M
+#if CONFIG_ARM_SECURE_FIRMWARE
 /* Test BASEPRI and FAULTMASK special registers (Non-Secure) */
 static inline int iec60730b_test_cpu_cortex_special_ns(void)
 {
@@ -857,7 +857,7 @@ static inline int iec60730b_test_cpu_cortex_special_ns(void)
 
 	return IEC60730B_TEST_OK;
 }
-#endif /* CONFIG_ARM_TRUSTZONE_M */
+#endif /* CONFIG_ARM_SECURE_FIRMWARE */
 
 /*******************************************************
  * Test CPU registers for IEC 60730 Class B compliance
@@ -907,7 +907,7 @@ int iec60730b_test_cpu(void)
 		return IEC60730B_TEST_CPU_ERROR;
 	}
 
-#if defined(CONFIG_ARM_TRUSTZONE_M)
+#if defined(CONFIG_ARM_SECURE_FIRMWARE)
 
 	/* PRIMASK Non-Secure */
 	if (iec60730b_test_cpu_cortex_primask_ns() != IEC60730B_TEST_OK) {
@@ -938,7 +938,7 @@ int iec60730b_test_cpu(void)
 	if (iec60730b_test_cpu_cortex_special_ns() != IEC60730B_TEST_OK) {
 		return IEC60730B_TEST_CPU_ERROR;
 	}
-#endif /* CONFIG_ARM_TRUSTZONE_M */
+#endif /* CONFIG_ARM_SECURE_FIRMWARE */
 #endif /* CONFIG_ARMV8_M_MAINLINE */
 #endif /* CONFIG_ARMV7_M_ARMV8_M_MAINLINE */
 

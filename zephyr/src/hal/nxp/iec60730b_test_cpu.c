@@ -100,7 +100,7 @@ int iec60730b_test_cpu(void)
 		return IEC60730B_TEST_CPU_ERROR;
 	}
 
-#ifdef CONFIG_ARM_TRUSTZONE_M
+#ifdef CONFIG_ARM_SECURE_FIRMWARE
 	/* PRIMASK Non-Secure */
 	if (FS_CM33_CPU_Primask_NS() == FS_FAIL_CPU_PRIMASK) {
 		return IEC60730B_TEST_CPU_ERROR;
@@ -110,7 +110,7 @@ int iec60730b_test_cpu(void)
 	/* SP main Secure */
 	FS_CM33_CPU_SPmain_S();
 
-#ifdef CONFIG_ARM_TRUSTZONE_M
+#ifdef CONFIG_ARM_SECURE_FIRMWARE
 	/* SP main Non-Secure */
 	FS_CM33_CPU_SPmain_NS();
 #endif
@@ -118,7 +118,7 @@ int iec60730b_test_cpu(void)
 	/* SP main limit Secure */
 	FS_CM33_CPU_SPmain_Limit_S();
 
-#ifdef CONFIG_ARM_TRUSTZONE_M
+#ifdef CONFIG_ARM_SECURE_FIRMWARE
 	/* SP main limit Non-Secure */
 	FS_CM33_CPU_SPmain_Limit_NS();
 #endif
@@ -126,7 +126,7 @@ int iec60730b_test_cpu(void)
 	/* SP process Secure */
 	FS_CM33_CPU_SPprocess_S();
 
-#ifdef CONFIG_ARM_TRUSTZONE_M
+#ifdef CONFIG_ARM_SECURE_FIRMWARE
 	/* SP process Non-Secure */
 	FS_CM33_CPU_SPprocess_NS();
 #endif
@@ -134,12 +134,12 @@ int iec60730b_test_cpu(void)
 	/* SP process limit Secure */
 	FS_CM33_CPU_SPprocess_Limit_S();
 
-#ifdef CONFIG_ARM_TRUSTZONE_M
+#ifdef CONFIG_ARM_SECURE_FIRMWARE
 	/* SP process limit Non-Secure */
 	FS_CM33_CPU_SPprocess_Limit_NS();
 #endif
 
-#ifdef CONFIG_ARM_TRUSTZONE_M
+#ifdef CONFIG_ARM_SECURE_FIRMWARE
 	if (FS_CM33_CPU_Control_S() == FS_FAIL_CPU_CONTROL) {
 		return IEC60730B_TEST_CPU_ERROR;
 	}
@@ -155,7 +155,7 @@ int iec60730b_test_cpu(void)
 #endif
 #endif
 
-#ifdef CONFIG_ARM_TRUSTZONE_M
+#ifdef CONFIG_ARM_SECURE_FIRMWARE
 	/* CONTROL Non-Secure */
 	if (FS_CM33_CPU_Control_NS() == FS_FAIL_CPU_CONTROL) {
 		return IEC60730B_TEST_CPU_ERROR;
@@ -167,7 +167,7 @@ int iec60730b_test_cpu(void)
 		return IEC60730B_TEST_CPU_ERROR;
 	}
 
-#ifdef CONFIG_ARM_TRUSTZONE_M
+#ifdef CONFIG_ARM_SECURE_FIRMWARE
 	/* Special Non-Secure */
 	if (FS_CM33_CPU_Special8PriorityLevels_NS() == FS_FAIL_CPU_SPECIAL) {
 		return IEC60730B_TEST_CPU_ERROR;
