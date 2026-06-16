@@ -525,8 +525,13 @@ static void safety_rutime_tests(void)
 #endif /* CONFIG_IEC60730B_TEST_FLASH */
 
 #ifdef CONFIG_IEC60730B_TEST_DIO
-	/* NOTE: Test is failed if the sw0 button pressed & hold*/
-	result = iec60730b_test_dio_input(test_gpio_input.port, test_gpio_input.pin, 1);
+	/*
+	 * The DIO input self-test compares the raw pin level against the expected
+	 * value, so the expected value must be the pin's idle (inactive) level.
+	 * NOTE: Test fails if the sw0 button is pressed & held.
+	 */
+	result = iec60730b_test_dio_input(test_gpio_input.port, test_gpio_input.pin,
+					 (test_gpio_input.dt_flags & GPIO_ACTIVE_LOW) ? 1 : 0);
 	safety_test_result_handler(result, "DIO Input test");
 
 	result = iec60730b_test_dio_output(test_gpio_output.port, test_gpio_output.pin);

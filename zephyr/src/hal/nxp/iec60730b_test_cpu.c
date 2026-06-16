@@ -4,6 +4,19 @@
  */
 
 #include "iec60730b_test.h"
+
+/*
+ * Some NXP SoC register headers (pulled in transitively by the Zephyr driver
+ * headers above, e.g. on RT600/RT500) define a short object-like macro "CMP"
+ * for the analog comparator peripheral instance. That collides with the "CMP"
+ * field of the STM register-layout struct in the iec60730b bare-metal library
+ * (iec60730b_types.h), breaking its compilation.
+ * So drop the macro here before the library headers are included.
+ */
+#ifdef CMP
+#undef CMP
+#endif
+
 #include <iec60730b.h>
 #include <iec60730b_core.h>
 

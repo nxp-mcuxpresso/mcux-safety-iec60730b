@@ -36,6 +36,7 @@ menuconfig APP_SAFETY_TASK_WATCHDOG
     bool "Safety Task Watchdog"
     default y
     select TASK_WDT
+    select WATCHDOG
     help
       Enable task watchdog for safety monitoring. The task watchdog
       monitors the safety test thread and triggers a callback if

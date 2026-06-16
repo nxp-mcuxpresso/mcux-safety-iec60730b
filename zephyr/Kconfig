@@ -10,7 +10,7 @@ if IEC60730B
 
     choice IEC60730B_HAL
         prompt "IEC60730B Hardware Abstraction Layer (HAL) Selection"
-        default IEC60730B_HAL_NXP if SOC_FAMILY_MCXN || SOC_FAMILY_MCXW || SOC_FAMILY_MCXA || SOC_FAMILY_MCXC || \
+        default IEC60730B_HAL_NXP if SOC_FAMILY_MCXN || SOC_FAMILY_MCXW || SOC_FAMILY_MCXA || SOC_FAMILY_MCXC || SOC_FAMILY_MCXE || SOC_FAMILY_MCXL ||\
                                      SOC_FAMILY_KINETIS || SOC_FAMILY_NXP_IMX || SOC_FAMILY_NXP_IMXRT || SOC_FAMILY_LPC || SOC_FAMILY_NXP_S32 || SOC_FAMILY_NXP_RW
         default IEC60730B_HAL_ZEPHYR
         help
@@ -93,6 +93,7 @@ if IEC60730B
     config IEC60730B_TEST_FLASH
         bool "IEC60730B Flash Memory test routines"
         default y
+        select CRC
         help
           Enable flash memory test routines for the IEC60730B safety library.
           This test verifies the integrity of flash memory contents
@@ -110,6 +111,20 @@ if IEC60730B
           compared to CRC32. Suitable for most IEC 60730 Class B applications
           where flash memory size is moderate.
 
+    if IEC60730B_TEST_FLASH_CRC16
+
+    config IEC60730B_TEST_FLASH_CRC16_SEED
+        hex "CRC16 seed value for flash test"
+        default 0xFFFF
+        range 0x0 0xFFFF
+        help
+          Initial seed value for CRC16 calculation.
+          All 0xFF is standard for most CRC implementations.
+          Must match the seed used when pre-calculating the
+          expected CRC value.
+
+    endif #IEC60730B_TEST_FLASH_CRC16
+
     config IEC60730B_TEST_FLASH_CRC32
         bool "IEC60730B Flash CRC32 Algorithm"
         default y
@@ -121,14 +136,19 @@ if IEC60730B
           The trade-off is slightly longer computation time and higher
           memory overhead for storing checksums.
 
-    config IEC60730B_TEST_FLASH_CRC_SEED
-        hex "CRC seed value for flash test"
+    if IEC60730B_TEST_FLASH_CRC32
+
+    config IEC60730B_TEST_FLASH_CRC32_SEED
+        hex "CRC32 seed value for flash test"
         default 0xFFFFFFFF
+        range 0x0 0xFFFFFFFF
         help
-          Initial seed value for CRC calculation.
+          Initial seed value for CRC32 calculation.
           All 0xFF is standard for most CRC implementations.
           Must match the seed used when pre-calculating the
           expected CRC value.
+
+    endif #IEC60730B_TEST_FLASH_CRC32
 
     endif #IEC60730B_TEST_FLASH
 
@@ -143,7 +163,7 @@ if IEC60730B
     config IEC60730B_TEST_AIO
         bool "IEC60730B Analog Input/Output test routines"
         default y
-        select CONFIG_ADC
+        select ADC
         help
           Enable Analog Input/Output (AIO) test routines for the IEC60730B safety library.
           This test verifies the integrity of analog input and

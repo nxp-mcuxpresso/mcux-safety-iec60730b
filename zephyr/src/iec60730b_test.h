@@ -230,6 +230,11 @@ int iec60730b_test_stack(void *stack_start, size_t stack_size, size_t guard_size
  * required by IEC 60730 Class B. The test calculates a CRC16 checksum over
  * the specified memory region and compares it against the expected value.
  *
+ * Algorithm: MSB-first, polynomial 0x1021, no reflection, no XOR-out, seed
+ * taken from @c CONFIG_IEC60730B_TEST_FLASH_CRC16_SEED. With the default
+ * seed (0xFFFF) this matches CRC-16/CCITT-FALSE. The caller is responsible
+ * for pre-computing @p crc_expected with the same algorithm and seed.
+ *
  * @param start Starting address of the flash memory area to test.
  * @param size Size of the flash memory area in bytes.
  * @param crc_expected Expected CRC16 checksum value for comparison.
@@ -247,6 +252,12 @@ int iec60730b_test_flash_crc16(const void *start, size_t size, uint16_t crc_expe
  * calculation to detect memory corruption and ensure data integrity as
  * required by IEC 60730 Class B. The test calculates a CRC32 checksum over
  * the specified memory region and compares it against the expected value.
+ *
+ * Algorithm: MSB-first, polynomial 0x04C11DB7, no reflection, no XOR-out,
+ * seed taken from @c CONFIG_IEC60730B_TEST_FLASH_CRC32_SEED. With the
+ * default seed (0xFFFFFFFF) this matches CRC-32/MPEG-2. The caller is
+ * responsible for pre-computing @p crc_expected with the same algorithm
+ * and seed.
  *
  * @param start Starting address of the flash memory area to test.
  * @param size Size of the flash memory area in bytes.
