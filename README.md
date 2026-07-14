@@ -20,5 +20,5 @@ The following application types are available:
 ### Setup
 
 Instructions on how to install the MCUXpresso SDK provided from GitHub via west manifest [SDK Installation Instructions](https://mcuxpresso.nxp.com/mcuxsdk/latest/html/gsd/installation.html#installation) or 
-how to evaluate an example project [Building Example Projects](https://mcuxpresso.nxp.com/mcuxsdk/latest/html/gsd/run_project.html#evaluate-an-example-project).
+how to evaluate an example project [Building Example Projects](https://mcuxpresso.nxp.com/mcuxsdk/latest/html/gsd/run_project.html).
   
